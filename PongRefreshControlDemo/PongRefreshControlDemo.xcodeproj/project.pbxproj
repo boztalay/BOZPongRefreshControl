@@ -19,6 +19,12 @@
 		FBB1561D185260B90072DCEC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBB15605185260B90072DCEC /* UIKit.framework */; };
 		FBB15625185260B90072DCEC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FBB15623185260B90072DCEC /* InfoPlist.strings */; };
 		FBB15627185260B90072DCEC /* PongRefreshControlDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB15626185260B90072DCEC /* PongRefreshControlDemoTests.m */; };
+		FBB15633185262A80072DCEC /* BOZPongRefreshControl.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB15632185262A80072DCEC /* BOZPongRefreshControl.m */; };
+		FBB15634185262A80072DCEC /* BOZPongRefreshControl.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB15632185262A80072DCEC /* BOZPongRefreshControl.m */; };
+		FBB1563F1852638D0072DCEC /* BOZDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */; };
+		FBB156401852638D0072DCEC /* BOZDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */; };
+		FBB156411852638D0072DCEC /* BOZDemoViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBB1563E1852638D0072DCEC /* BOZDemoViewController.xib */; };
+		FBB156421852638D0072DCEC /* BOZDemoViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBB1563E1852638D0072DCEC /* BOZDemoViewController.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +54,11 @@
 		FBB15622185260B90072DCEC /* PongRefreshControlDemoTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "PongRefreshControlDemoTests-Info.plist"; sourceTree = "<group>"; };
 		FBB15624185260B90072DCEC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FBB15626185260B90072DCEC /* PongRefreshControlDemoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PongRefreshControlDemoTests.m; sourceTree = "<group>"; };
+		FBB15631185262A80072DCEC /* BOZPongRefreshControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BOZPongRefreshControl.h; path = ../BOZPongRefreshControl/BOZPongRefreshControl.h; sourceTree = "<group>"; };
+		FBB15632185262A80072DCEC /* BOZPongRefreshControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BOZPongRefreshControl.m; path = ../BOZPongRefreshControl/BOZPongRefreshControl.m; sourceTree = "<group>"; };
+		FBB1563C1852638D0072DCEC /* BOZDemoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BOZDemoViewController.h; sourceTree = "<group>"; };
+		FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BOZDemoViewController.m; sourceTree = "<group>"; };
+		FBB1563E1852638D0072DCEC /* BOZDemoViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BOZDemoViewController.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +88,7 @@
 		FBB155F5185260B90072DCEC = {
 			isa = PBXGroup;
 			children = (
+				FBB15630185262900072DCEC /* BOZPongRefreshControl */,
 				FBB15607185260B90072DCEC /* PongRefreshControlDemo */,
 				FBB15620185260B90072DCEC /* PongRefreshControlDemoTests */,
 				FBB15600185260B90072DCEC /* Frameworks */,
@@ -109,6 +121,9 @@
 			children = (
 				FBB15610185260B90072DCEC /* BOZAppDelegate.h */,
 				FBB15611185260B90072DCEC /* BOZAppDelegate.m */,
+				FBB1563C1852638D0072DCEC /* BOZDemoViewController.h */,
+				FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */,
+				FBB1563E1852638D0072DCEC /* BOZDemoViewController.xib */,
 				FBB15613185260B90072DCEC /* Images.xcassets */,
 				FBB15608185260B90072DCEC /* Supporting Files */,
 			);
@@ -142,6 +157,15 @@
 				FBB15623185260B90072DCEC /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		FBB15630185262900072DCEC /* BOZPongRefreshControl */ = {
+			isa = PBXGroup;
+			children = (
+				FBB15631185262A80072DCEC /* BOZPongRefreshControl.h */,
+				FBB15632185262A80072DCEC /* BOZPongRefreshControl.m */,
+			);
+			name = BOZPongRefreshControl;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -221,6 +245,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBB1560C185260B90072DCEC /* InfoPlist.strings in Resources */,
+				FBB156411852638D0072DCEC /* BOZDemoViewController.xib in Resources */,
 				FBB15614185260B90072DCEC /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -230,6 +255,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBB15625185260B90072DCEC /* InfoPlist.strings in Resources */,
+				FBB156421852638D0072DCEC /* BOZDemoViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,7 +267,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBB15612185260B90072DCEC /* BOZAppDelegate.m in Sources */,
+				FBB1563F1852638D0072DCEC /* BOZDemoViewController.m in Sources */,
 				FBB1560E185260B90072DCEC /* main.m in Sources */,
+				FBB15633185262A80072DCEC /* BOZPongRefreshControl.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,6 +277,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBB15634185262A80072DCEC /* BOZPongRefreshControl.m in Sources */,
+				FBB156401852638D0072DCEC /* BOZDemoViewController.m in Sources */,
 				FBB15627185260B90072DCEC /* PongRefreshControlDemoTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -442,6 +472,7 @@
 				FBB1562C185260B90072DCEC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		FBB1562D185260B90072DCEC /* Build configuration list for PBXNativeTarget "PongRefreshControlDemoTests" */ = {
 			isa = XCConfigurationList;
@@ -450,6 +481,7 @@
 				FBB1562F185260B90072DCEC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
