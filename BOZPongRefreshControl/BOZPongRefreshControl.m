@@ -55,6 +55,8 @@ typedef enum {
                                   withTarget:(UIViewController*)target
                                    andAction:(SEL)refreshAction
 {
+    CGRect pongRefreshControlFrame;
+    
     if([scrollView isKindOfClass:[UITableView class]]) {
         UITableView* tableView = (UITableView*)scrollView;
         
@@ -62,16 +64,29 @@ typedef enum {
             return (BOZPongRefreshControl*)tableView.tableHeaderView;
         }
         
-        BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)
-                                                                                   andScrollView:scrollView
-                                                                                       andTarget:target
-                                                                                andRefreshAction:refreshAction];
-        [tableView setTableHeaderView:pongRefreshControl];
-        
-        return pongRefreshControl;
+        pongRefreshControlFrame = CGRectMake(0.0f, 0.0f, scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT);
     } else {
-        return nil;
+        for(UIView* subview in scrollView.subviews) {
+            if([subview isKindOfClass:[BOZPongRefreshControl class]]) {
+                return (BOZPongRefreshControl*)subview;
+            }
+        }
+        
+        pongRefreshControlFrame = CGRectMake(0.0f, -REFRESH_CONTROL_HEIGHT, scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT);
     }
+    
+    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:pongRefreshControlFrame
+                                                                               andScrollView:scrollView
+                                                                                   andTarget:target
+                                                                            andRefreshAction:refreshAction];
+
+    if([scrollView isKindOfClass:[UITableView class]]) {
+        [(UITableView*)scrollView setTableHeaderView:pongRefreshControl];
+    } else {
+        [scrollView addSubview:pongRefreshControl];
+    }
+    
+    return pongRefreshControl;
 }
 
 - (id)initWithFrame:(CGRect)frame
@@ -90,6 +105,10 @@ typedef enum {
         state = BOZPongRefreshControlStateIdle;
         
         originalTopContentInset = self.scrollView.contentInset.top;
+        if(![scrollView isKindOfClass:[UITableView class]]) {
+            originalTopContentInset += REFRESH_CONTROL_HEIGHT;
+        }
+        
         UIEdgeInsets currentInsets = self.scrollView.contentInset;
         currentInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
         self.scrollView.contentInset = currentInsets;
