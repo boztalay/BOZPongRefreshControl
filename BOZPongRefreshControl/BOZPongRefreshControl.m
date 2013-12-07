@@ -155,7 +155,7 @@ typedef enum {
         CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.tableView.contentOffset.y - originalTopContentInset;
         CGFloat offset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
         
-        NSLog(@"contentOffset: %f; rawOffset: %f; offset: %f", self.tableView.contentOffset.y, rawOffset, offset);
+//        NSLog(@"contentOffset: %f; rawOffset: %f; offset: %f", self.tableView.contentOffset.y, rawOffset, offset);
         
         ballView.center = CGPointMake(ballIdleOrigin.x, ballIdleOrigin.y + offset);
         leftPaddleView.center = CGPointMake(leftPaddleIdleOrigin.x, leftPaddleIdleOrigin.y - offset);
