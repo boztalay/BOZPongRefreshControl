@@ -247,9 +247,9 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="LdJ-9C-9xx" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1427" y="-191"/>
+            <point key="canvasLocation" x="1427" y="1207"/>
         </scene>
-        <!--Scroll View Controller-->
+        <!--Scroll View Controller - On a UIScrollView-->
         <scene sceneID="4cE-sB-JH2">
             <objects>
                 <viewController automaticallyAdjustsScrollViewInsets="NO" id="v9T-Y0-1rm" customClass="BOZScrollViewController" sceneMemberID="viewController">
@@ -287,16 +287,16 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
-                    <navigationItem key="navigationItem" id="1kv-en-IZD"/>
+                    <navigationItem key="navigationItem" title="On a UIScrollView" id="1kv-en-IZD"/>
                     <connections>
                         <outlet property="scrollView" destination="opa-Ve-fMj" id="HBE-cw-cDS"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="PHL-fo-uND" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1427" y="1204"/>
+            <point key="canvasLocation" x="1427" y="-191"/>
         </scene>
-        <!--Regular View Controller-->
+        <!--Regular View Controller - On a UIViewController-->
         <scene sceneID="KLn-pB-G8d">
             <objects>
                 <viewController automaticallyAdjustsScrollViewInsets="NO" id="aHF-Nu-06f" customClass="BOZRegularViewController" sceneMemberID="viewController">
@@ -343,7 +343,7 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
-                    <navigationItem key="navigationItem" id="dUQ-di-ght"/>
+                    <navigationItem key="navigationItem" title="On a UIViewController" id="dUQ-di-ght"/>
                     <connections>
                         <outlet property="tableView" destination="rRX-YA-fQq" id="23K-sA-tbr"/>
                     </connections>
