@@ -24,7 +24,7 @@
                                                             withTarget:self
                                                              andAction:@selector(refreshTriggered)];
     
-    tableViewContent = [NSArray arrayWithObjects:@"Row 1", @"Row 2", @"Row3", nil];
+    tableViewContent = [NSArray arrayWithObjects:@"Row 1", @"Row 2", @"Row 3", nil];
 }
 
 #pragma mark - Notifying the pong refresh control of scrolling
@@ -44,6 +44,12 @@
 - (void)refreshTriggered
 {
     
+}
+
+#pragma mark - Resetting the refresh control when loading is done
+
+- (IBAction)doneLoadingButtonPressed:(id)sender {
+    [self.pongRefreshControl finishedLoading];
 }
 
 #pragma mark - Table view data source

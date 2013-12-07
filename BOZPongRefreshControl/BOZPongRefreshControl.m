@@ -26,6 +26,8 @@ typedef enum {
 @interface BOZPongRefreshControl() {
     BOZPongRefreshControlState state;
     
+    CGFloat originalTopContentInset;
+    
     UIView* leftPaddleView;
     UIView* rightPaddleView;
     UIView* ballView;
@@ -77,6 +79,8 @@ typedef enum {
         
         state = BOZPongRefreshControlStateIdle;
         
+        originalTopContentInset = self.tableView.contentInset.top;
+        
         leftPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.25f, self.frame.size.height);
         leftPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
         leftPaddleView.center = leftPaddleIdleOrigin;
@@ -114,7 +118,7 @@ typedef enum {
     [UIView animateWithDuration:0.2f animations:^(void)
     {
         UIEdgeInsets newInsets = self.tableView.contentInset;
-        newInsets.top = -REFRESH_CONTROL_HEIGHT;
+        newInsets.top = originalTopContentInset - 1.0f;
         self.tableView.contentInset = newInsets;
     }
     completion:^(BOOL finished)
@@ -138,8 +142,10 @@ typedef enum {
     if(state == BOZPongRefreshControlStateIdle) {
         //Moving and rotating the paddles and ball into place
         
-        CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.tableView.contentOffset.y;
+        CGFloat rawOffset = -self.tableView.contentOffset.y;
         CGFloat offset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
+        
+        NSLog(@"contentOffset: %f; rawOffset: %f; offset: %f", self.tableView.contentOffset.y, rawOffset, offset);
         
         ballView.center = CGPointMake(ballIdleOrigin.x, ballIdleOrigin.y + offset);
         leftPaddleView.center = CGPointMake(leftPaddleIdleOrigin.x, leftPaddleIdleOrigin.y - offset);
@@ -160,13 +166,13 @@ typedef enum {
 - (void)userStoppedDragging
 {
     if(state == BOZPongRefreshControlStateIdle) {
-        if(self.tableView.contentOffset.y < 0.0f) {
+        if(self.tableView.contentOffset.y < originalTopContentInset) {
             state = BOZPongRefreshControlStateRefreshing;
         
             //Animate back into place
             [UIView animateWithDuration:0.2f animations:^(void) {
                 UIEdgeInsets newInsets = self.tableView.contentInset;
-                newInsets.top = 0.0f;
+                newInsets.top = originalTopContentInset + REFRESH_CONTROL_HEIGHT - 1.0f;
                 self.tableView.contentInset = newInsets;
             }];
             

@@ -23,8 +23,8 @@
 		FBB15634185262A80072DCEC /* BOZPongRefreshControl.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB15632185262A80072DCEC /* BOZPongRefreshControl.m */; };
 		FBB1563F1852638D0072DCEC /* BOZDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */; };
 		FBB156401852638D0072DCEC /* BOZDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */; };
-		FBB156411852638D0072DCEC /* BOZDemoViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBB1563E1852638D0072DCEC /* BOZDemoViewController.xib */; };
-		FBB156421852638D0072DCEC /* BOZDemoViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBB1563E1852638D0072DCEC /* BOZDemoViewController.xib */; };
+		FBB156441852C4EC0072DCEC /* Storyboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FBB156431852C4EC0072DCEC /* Storyboard.storyboard */; };
+		FBB156451852C4EC0072DCEC /* Storyboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FBB156431852C4EC0072DCEC /* Storyboard.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,7 +58,7 @@
 		FBB15632185262A80072DCEC /* BOZPongRefreshControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BOZPongRefreshControl.m; path = ../BOZPongRefreshControl/BOZPongRefreshControl.m; sourceTree = "<group>"; };
 		FBB1563C1852638D0072DCEC /* BOZDemoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BOZDemoViewController.h; sourceTree = "<group>"; };
 		FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BOZDemoViewController.m; sourceTree = "<group>"; };
-		FBB1563E1852638D0072DCEC /* BOZDemoViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BOZDemoViewController.xib; sourceTree = "<group>"; };
+		FBB156431852C4EC0072DCEC /* Storyboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Storyboard.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,7 +123,7 @@
 				FBB15611185260B90072DCEC /* BOZAppDelegate.m */,
 				FBB1563C1852638D0072DCEC /* BOZDemoViewController.h */,
 				FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */,
-				FBB1563E1852638D0072DCEC /* BOZDemoViewController.xib */,
+				FBB156431852C4EC0072DCEC /* Storyboard.storyboard */,
 				FBB15613185260B90072DCEC /* Images.xcassets */,
 				FBB15608185260B90072DCEC /* Supporting Files */,
 			);
@@ -245,8 +245,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBB1560C185260B90072DCEC /* InfoPlist.strings in Resources */,
-				FBB156411852638D0072DCEC /* BOZDemoViewController.xib in Resources */,
 				FBB15614185260B90072DCEC /* Images.xcassets in Resources */,
+				FBB156441852C4EC0072DCEC /* Storyboard.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,7 +255,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBB15625185260B90072DCEC /* InfoPlist.strings in Resources */,
-				FBB156421852638D0072DCEC /* BOZDemoViewController.xib in Resources */,
+				FBB156451852C4EC0072DCEC /* Storyboard.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

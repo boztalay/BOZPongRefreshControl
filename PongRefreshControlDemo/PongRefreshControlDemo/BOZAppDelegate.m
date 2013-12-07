@@ -7,20 +7,18 @@
 //
 
 #import "BOZAppDelegate.h"
-#import "BOZDemoViewController.h"
 
 @implementation BOZAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    [self.window setBackgroundColor:[UIColor whiteColor]];
-    
-    BOZDemoViewController* viewController = [[BOZDemoViewController alloc] init];
-    self.window.rootViewController = viewController;
-    
-    [self.window makeKeyAndVisible];
 
+    UIStoryboard* storyboard = [UIStoryboard storyboardWithName:[[NSBundle mainBundle].infoDictionary objectForKey:@"UIMainStoryboardFile"] bundle:[NSBundle mainBundle]];
+    self.window.rootViewController = [storyboard instantiateInitialViewController];
+    
+    self.window.backgroundColor = [UIColor whiteColor];
+    [self.window makeKeyAndVisible];
     return YES;
 }
 
