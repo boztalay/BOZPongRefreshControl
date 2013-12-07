@@ -10,22 +10,22 @@
 
 @interface BOZPongRefreshControl : UIView <UIScrollViewDelegate>
 
-@property (weak, nonatomic) UITableView* tableView;
+@property (weak, nonatomic) UIScrollView* scrollView;
 @property (weak, nonatomic) UIViewController* target;
 @property (nonatomic) SEL refreshAction;
 
-+ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView
-                                 withTarget:(UIViewController*)target
-                                  andAction:(SEL)refreshAction;
++ (BOZPongRefreshControl*)attachToScrollView:(UIScrollView*)scrollView
+                                  withTarget:(UIViewController*)target
+                                   andAction:(SEL)refreshAction;
 
 - (id)initWithFrame:(CGRect)frame
-       andTableView:(UITableView*)tableView
+      andScrollView:(UIScrollView*)scrollView
           andTarget:(UIViewController*)target
    andRefreshAction:(SEL)refreshAction;
 
 - (void)finishedLoading;
 
-- (void)tableViewScrolled;
+- (void)scrollViewScrolled;
 - (void)userStoppedDragging;
 
 @end

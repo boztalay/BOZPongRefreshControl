@@ -1,18 +1,40 @@
 //
-//  BOZNoNavBarViewController.m
+//  BOZScrollViewController.m
 //  PongRefreshControlDemo
 //
-//  Created by Ben Oztalay on 12/6/13.
+//  Created by Ben Oztalay on 12/7/13.
 //  Copyright (c) 2013 Ben Oztalay. All rights reserved.
 //
 
-#import "BOZNoNavBarViewController.h"
+#import "BOZScrollViewController.h"
 
-@implementation BOZNoNavBarViewController
+#define STRIPE_HEIGHT 50.0f
+#define NUM_STRIPES 11
+#define SCROLLVIEW_CONTENT_HEIGHT (STRIPE_HEIGHT * NUM_STRIPES)
+
+@implementation BOZScrollViewController
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+
+    self.scrollView.contentSize = CGSizeMake(self.scrollView.frame.size.width, SCROLLVIEW_CONTENT_HEIGHT);
+    for(int i = 0; i < NUM_STRIPES; i++) {
+        UIView* view = [[UIView alloc] initWithFrame:CGRectMake(0.0f, i * STRIPE_HEIGHT, self.scrollView.frame.size.width, STRIPE_HEIGHT)];
+        CGFloat proportionOfScrollViewFilled = ((float)i / (float)NUM_STRIPES);
+        view.backgroundColor = [UIColor colorWithWhite:proportionOfScrollViewFilled alpha:1.0f];
+        
+        if(i == 0) {
+            UILabel* scrollMeLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+            scrollMeLabel.text = @"Scroll Me!";
+            scrollMeLabel.textColor = [UIColor whiteColor];
+            [scrollMeLabel sizeToFit];
+            scrollMeLabel.center = CGPointMake(view.frame.size.width / 2.0f, view.frame.size.height / 2.0f);
+            [view addSubview:scrollMeLabel];
+        }
+        
+        [self.scrollView addSubview:view];
+    }
     
     /* NOTE: Do not attach the refresh control in viewDidLoad!
      * If you do this here, it'll act very funny if you have
@@ -25,7 +47,7 @@
 
 - (void)viewDidLayoutSubviews
 {
-    self.pongRefreshControl = [BOZPongRefreshControl attachToScrollView:self.tableView
+    self.pongRefreshControl = [BOZPongRefreshControl attachToScrollView:self.scrollView
                                                             withTarget:self
                                                              andAction:@selector(refreshTriggered)];
 }
@@ -35,6 +57,7 @@
 {
     [self.pongRefreshControl finishedLoading];
 }
+
 
 #pragma mark - Notifying the pong refresh control of scrolling
 
@@ -60,13 +83,6 @@
 - (IBAction)doneLoadingButtonPressed:(id)sender
 {
     [self.pongRefreshControl finishedLoading];
-}
-
-#pragma mark - Going back
-
-- (IBAction)goBackButtonPressed:(id)sender
-{
-    [self dismissViewControllerAnimated:YES completion:NULL];
 }
 
 @end

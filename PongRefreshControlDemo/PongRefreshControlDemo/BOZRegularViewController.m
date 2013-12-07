@@ -1,14 +1,14 @@
 //
-//  BOZNoNavBarViewController.m
+//  BOZRegularViewController.m
 //  PongRefreshControlDemo
 //
-//  Created by Ben Oztalay on 12/6/13.
+//  Created by Ben Oztalay on 12/7/13.
 //  Copyright (c) 2013 Ben Oztalay. All rights reserved.
 //
 
-#import "BOZNoNavBarViewController.h"
+#import "BOZRegularViewController.h"
 
-@implementation BOZNoNavBarViewController
+@implementation BOZRegularViewController
 
 - (void)viewDidLoad
 {
@@ -62,11 +62,25 @@
     [self.pongRefreshControl finishedLoading];
 }
 
-#pragma mark - Going back
+#pragma mark - Table view data source
 
-- (IBAction)goBackButtonPressed:(id)sender
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    [self dismissViewControllerAnimated:YES completion:NULL];
+    return 7;
+}
+
+- (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+    }
+    
+    cell.textLabel.text = [NSString stringWithFormat:@"Row %d", indexPath.row];
+    cell.contentView.backgroundColor = [UIColor colorWithWhite:0.75f alpha:1.0f];
+    
+    return cell;
 }
 
 @end

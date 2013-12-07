@@ -51,23 +51,31 @@ typedef enum {
 
 #pragma mark - Init
 
-+ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView withTarget:(UIViewController*)target andAction:(SEL)refreshAction
++ (BOZPongRefreshControl*)attachToScrollView:(UIScrollView*)scrollView
+                                  withTarget:(UIViewController*)target
+                                   andAction:(SEL)refreshAction
 {
-    if(tableView.tableHeaderView != nil && [tableView.tableHeaderView isKindOfClass:[BOZPongRefreshControl class]]) {
-        return (BOZPongRefreshControl*)tableView.tableHeaderView;
+    if([scrollView isKindOfClass:[UITableView class]]) {
+        UITableView* tableView = (UITableView*)scrollView;
+        
+        if(tableView.tableHeaderView != nil && [tableView.tableHeaderView isKindOfClass:[BOZPongRefreshControl class]]) {
+            return (BOZPongRefreshControl*)tableView.tableHeaderView;
+        }
+        
+        BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)
+                                                                                   andScrollView:scrollView
+                                                                                       andTarget:target
+                                                                                andRefreshAction:refreshAction];
+        [tableView setTableHeaderView:pongRefreshControl];
+        
+        return pongRefreshControl;
+    } else {
+        return nil;
     }
-    
-    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)
-                                                                                andTableView:tableView
-                                                                                   andTarget:target
-                                                                            andRefreshAction:refreshAction];
-    [tableView setTableHeaderView:pongRefreshControl];
-    
-    return pongRefreshControl;
 }
 
 - (id)initWithFrame:(CGRect)frame
-       andTableView:(UITableView*)tableView
+      andScrollView:(UIScrollView*)scrollView
           andTarget:(UIViewController*)target
    andRefreshAction:(SEL)refreshAction
 {
@@ -75,16 +83,16 @@ typedef enum {
     if (self) {
         self.clipsToBounds = YES;
         
-        self.tableView = tableView;
+        self.scrollView = scrollView;
         self.target = target;
         self.refreshAction = refreshAction;
         
         state = BOZPongRefreshControlStateIdle;
         
-        originalTopContentInset = self.tableView.contentInset.top;
-        UIEdgeInsets currentInsets = self.tableView.contentInset;
+        originalTopContentInset = self.scrollView.contentInset.top;
+        UIEdgeInsets currentInsets = self.scrollView.contentInset;
         currentInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
-        self.tableView.contentInset = currentInsets;
+        self.scrollView.contentInset = currentInsets;
         
         leftPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.25f, self.frame.size.height);
         leftPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
@@ -127,9 +135,9 @@ typedef enum {
     
     [UIView animateWithDuration:0.2f animations:^(void)
     {
-        UIEdgeInsets newInsets = self.tableView.contentInset;
+        UIEdgeInsets newInsets = self.scrollView.contentInset;
         newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
-        self.tableView.contentInset = newInsets;
+        self.scrollView.contentInset = newInsets;
     }
     completion:^(BOOL finished)
     {
@@ -147,12 +155,12 @@ typedef enum {
 
 #pragma mark - Listening to scrolling
 
-- (void)tableViewScrolled
+- (void)scrollViewScrolled
 {
     if(state == BOZPongRefreshControlStateIdle) {
         //Moving and rotating the paddles and ball into place
         
-        CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.tableView.contentOffset.y - originalTopContentInset;
+        CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.scrollView.contentOffset.y - originalTopContentInset;
         CGFloat offset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
         
 //        NSLog(@"contentOffset: %f; rawOffset: %f; offset: %f", self.tableView.contentOffset.y, rawOffset, offset);
@@ -176,14 +184,14 @@ typedef enum {
 - (void)userStoppedDragging
 {
     if(state == BOZPongRefreshControlStateIdle) {
-        if(self.tableView.contentOffset.y < -originalTopContentInset) {
+        if(self.scrollView.contentOffset.y < -originalTopContentInset) {
             state = BOZPongRefreshControlStateRefreshing;
         
             //Animate back into place
             [UIView animateWithDuration:0.2f animations:^(void) {
-                UIEdgeInsets newInsets = self.tableView.contentInset;
+                UIEdgeInsets newInsets = self.scrollView.contentInset;
                 newInsets.top = originalTopContentInset;
-                self.tableView.contentInset = newInsets;
+                self.scrollView.contentInset = newInsets;
             }];
             
             //Start the game

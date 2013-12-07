@@ -25,7 +25,7 @@
 
 - (void)viewDidLayoutSubviews
 {
-    self.pongRefreshControl = [BOZPongRefreshControl attachToTableView:self.tableView
+    self.pongRefreshControl = [BOZPongRefreshControl attachToScrollView:self.tableView
                                                             withTarget:self
                                                              andAction:@selector(refreshTriggered)];
 }
@@ -40,7 +40,7 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-    [self.pongRefreshControl tableViewScrolled];
+    [self.pongRefreshControl scrollViewScrolled];
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
