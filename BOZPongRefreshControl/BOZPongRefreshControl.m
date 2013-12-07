@@ -51,35 +51,40 @@ typedef enum {
 
 #pragma mark - Init
 
-+ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView withTarget:(id)target andAction:(SEL)refreshAction
++ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView withTarget:(UIViewController*)target andAction:(SEL)refreshAction
 {
-    if(tableView.tableHeaderView != nil) {
-        [NSException raise:@"Couldn't attach an BOZPongRefreshControl to the table, there was already a header view." format:@""];
-        return nil;
+    if(tableView.tableHeaderView != nil && [tableView.tableHeaderView isKindOfClass:[BOZPongRefreshControl class]]) {
+        return (BOZPongRefreshControl*)tableView.tableHeaderView;
     }
     
-    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)];
+    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)
+                                                                                andTableView:tableView
+                                                                                   andTarget:target
+                                                                            andRefreshAction:refreshAction];
     [tableView setTableHeaderView:pongRefreshControl];
-    pongRefreshControl.tableView = tableView;
-    pongRefreshControl.target = target;
-    pongRefreshControl.refreshAction = refreshAction;
-    
-    UIEdgeInsets currentInsets = tableView.contentInset;
-    currentInsets.top = -REFRESH_CONTROL_HEIGHT;
-    tableView.contentInset = currentInsets;
     
     return pongRefreshControl;
 }
 
 - (id)initWithFrame:(CGRect)frame
+       andTableView:(UITableView*)tableView
+          andTarget:(UIViewController*)target
+   andRefreshAction:(SEL)refreshAction
 {
     self = [super initWithFrame:frame];
     if (self) {
         self.clipsToBounds = YES;
         
+        self.tableView = tableView;
+        self.target = target;
+        self.refreshAction = refreshAction;
+        
         state = BOZPongRefreshControlStateIdle;
         
         originalTopContentInset = self.tableView.contentInset.top;
+        UIEdgeInsets currentInsets = self.tableView.contentInset;
+        currentInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
+        self.tableView.contentInset = currentInsets;
         
         leftPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.25f, self.frame.size.height);
         leftPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
@@ -105,6 +110,11 @@ typedef enum {
     return self;
 }
 
+- (BOOL)isiOS7OrAbove
+{
+    return ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0f);
+}
+
 #pragma mark - Resetting after loading finished
 
 - (void)finishedLoading
@@ -118,7 +128,7 @@ typedef enum {
     [UIView animateWithDuration:0.2f animations:^(void)
     {
         UIEdgeInsets newInsets = self.tableView.contentInset;
-        newInsets.top = originalTopContentInset - 1.0f;
+        newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
         self.tableView.contentInset = newInsets;
     }
     completion:^(BOOL finished)
@@ -142,7 +152,7 @@ typedef enum {
     if(state == BOZPongRefreshControlStateIdle) {
         //Moving and rotating the paddles and ball into place
         
-        CGFloat rawOffset = -self.tableView.contentOffset.y;
+        CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.tableView.contentOffset.y - originalTopContentInset;
         CGFloat offset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
         
         NSLog(@"contentOffset: %f; rawOffset: %f; offset: %f", self.tableView.contentOffset.y, rawOffset, offset);
@@ -166,13 +176,13 @@ typedef enum {
 - (void)userStoppedDragging
 {
     if(state == BOZPongRefreshControlStateIdle) {
-        if(self.tableView.contentOffset.y < originalTopContentInset) {
+        if(self.tableView.contentOffset.y < -originalTopContentInset) {
             state = BOZPongRefreshControlStateRefreshing;
         
             //Animate back into place
             [UIView animateWithDuration:0.2f animations:^(void) {
                 UIEdgeInsets newInsets = self.tableView.contentInset;
-                newInsets.top = originalTopContentInset + REFRESH_CONTROL_HEIGHT - 1.0f;
+                newInsets.top = originalTopContentInset;
                 self.tableView.contentInset = newInsets;
             }];
             

@@ -25,6 +25,8 @@
 		FBB156401852638D0072DCEC /* BOZDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */; };
 		FBB156441852C4EC0072DCEC /* Storyboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FBB156431852C4EC0072DCEC /* Storyboard.storyboard */; };
 		FBB156451852C4EC0072DCEC /* Storyboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FBB156431852C4EC0072DCEC /* Storyboard.storyboard */; };
+		FBB1564B1852D76C0072DCEC /* BOZNoNavBarViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB156491852D76C0072DCEC /* BOZNoNavBarViewController.m */; };
+		FBB1564C1852D76C0072DCEC /* BOZNoNavBarViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBB156491852D76C0072DCEC /* BOZNoNavBarViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +61,8 @@
 		FBB1563C1852638D0072DCEC /* BOZDemoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BOZDemoViewController.h; sourceTree = "<group>"; };
 		FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BOZDemoViewController.m; sourceTree = "<group>"; };
 		FBB156431852C4EC0072DCEC /* Storyboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Storyboard.storyboard; sourceTree = "<group>"; };
+		FBB156481852D76C0072DCEC /* BOZNoNavBarViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BOZNoNavBarViewController.h; sourceTree = "<group>"; };
+		FBB156491852D76C0072DCEC /* BOZNoNavBarViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BOZNoNavBarViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,9 +125,9 @@
 			children = (
 				FBB15610185260B90072DCEC /* BOZAppDelegate.h */,
 				FBB15611185260B90072DCEC /* BOZAppDelegate.m */,
-				FBB1563C1852638D0072DCEC /* BOZDemoViewController.h */,
-				FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */,
 				FBB156431852C4EC0072DCEC /* Storyboard.storyboard */,
+				FBB156461852D73A0072DCEC /* Demo View Controller */,
+				FBB156471852D7500072DCEC /* No Nav Bar View Controller */,
 				FBB15613185260B90072DCEC /* Images.xcassets */,
 				FBB15608185260B90072DCEC /* Supporting Files */,
 			);
@@ -166,6 +170,24 @@
 				FBB15632185262A80072DCEC /* BOZPongRefreshControl.m */,
 			);
 			name = BOZPongRefreshControl;
+			sourceTree = "<group>";
+		};
+		FBB156461852D73A0072DCEC /* Demo View Controller */ = {
+			isa = PBXGroup;
+			children = (
+				FBB1563C1852638D0072DCEC /* BOZDemoViewController.h */,
+				FBB1563D1852638D0072DCEC /* BOZDemoViewController.m */,
+			);
+			name = "Demo View Controller";
+			sourceTree = "<group>";
+		};
+		FBB156471852D7500072DCEC /* No Nav Bar View Controller */ = {
+			isa = PBXGroup;
+			children = (
+				FBB156481852D76C0072DCEC /* BOZNoNavBarViewController.h */,
+				FBB156491852D76C0072DCEC /* BOZNoNavBarViewController.m */,
+			);
+			name = "No Nav Bar View Controller";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -268,6 +290,7 @@
 			files = (
 				FBB15612185260B90072DCEC /* BOZAppDelegate.m in Sources */,
 				FBB1563F1852638D0072DCEC /* BOZDemoViewController.m in Sources */,
+				FBB1564B1852D76C0072DCEC /* BOZNoNavBarViewController.m in Sources */,
 				FBB1560E185260B90072DCEC /* main.m in Sources */,
 				FBB15633185262A80072DCEC /* BOZPongRefreshControl.m in Sources */,
 			);
@@ -280,6 +303,7 @@
 				FBB15634185262A80072DCEC /* BOZPongRefreshControl.m in Sources */,
 				FBB156401852638D0072DCEC /* BOZDemoViewController.m in Sources */,
 				FBB15627185260B90072DCEC /* PongRefreshControlDemoTests.m in Sources */,
+				FBB1564C1852D76C0072DCEC /* BOZNoNavBarViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

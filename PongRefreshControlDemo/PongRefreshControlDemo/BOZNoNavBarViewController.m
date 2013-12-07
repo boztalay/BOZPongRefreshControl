@@ -1,30 +1,19 @@
 //
-//  BOZDemoViewController.m
+//  BOZNoNavBarViewController.m
 //  PongRefreshControlDemo
 //
 //  Created by Ben Oztalay on 12/6/13.
 //  Copyright (c) 2013 Ben Oztalay. All rights reserved.
 //
 
-#import "BOZDemoViewController.h"
+#import "BOZNoNavBarViewController.h"
 
-@implementation BOZDemoViewController
+@implementation BOZNoNavBarViewController
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    /* NOTE: Do not attach the refresh control in viewDidLoad!
-     * If you do this here, it'll act very funny if you have
-     * a navigation bar or other such similar thing that iOS7
-     * automatically offsets content for. You have to wait for
-     * the subviews to get laid out first so the refresh
-     * control knows how big that offset is!
-     */
-}
-
-- (void)viewDidLayoutSubviews
-{
     self.pongRefreshControl = [BOZPongRefreshControl attachToTableView:self.tableView
                                                             withTarget:self
                                                              andAction:@selector(refreshTriggered)];
@@ -54,6 +43,13 @@
 - (IBAction)doneLoadingButtonPressed:(id)sender
 {
     [self.pongRefreshControl finishedLoading];
+}
+
+#pragma mark - Going back
+
+- (IBAction)goBackButtonPressed:(id)sender
+{
+    [self dismissViewControllerAnimated:YES completion:NULL];
 }
 
 @end
