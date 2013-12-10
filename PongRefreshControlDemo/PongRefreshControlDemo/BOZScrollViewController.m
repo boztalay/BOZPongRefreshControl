@@ -29,11 +29,9 @@
         view.backgroundColor = [UIColor colorWithWhite:whiteValue alpha:1.0f];
         
         if(i == 0) {
-            UILabel* scrollMeLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-            scrollMeLabel.text = @"Scroll Me!";
-            [scrollMeLabel sizeToFit];
-            scrollMeLabel.center = CGPointMake(view.frame.size.width / 2.0f, view.frame.size.height / 2.0f);
+            scrollMeLabel = [[UILabel alloc] initWithFrame:CGRectZero];
             [view addSubview:scrollMeLabel];
+            [self setScrollMeLabelText:@"Scroll Me!"];
         }
         
         [self.scrollView addSubview:view];
@@ -48,11 +46,21 @@
      */
 }
 
+- (void)setScrollMeLabelText:(NSString*)newText
+{
+    scrollMeLabel.text = newText;
+    [scrollMeLabel sizeToFit];
+    scrollMeLabel.center = CGPointMake(scrollMeLabel.superview.frame.size.width / 2.0f,
+                                       scrollMeLabel.superview.frame.size.height / 2.0f);
+}
+
 - (void)viewDidLayoutSubviews
 {
     self.pongRefreshControl = [BOZPongRefreshControl attachToScrollView:self.scrollView
                                                       withRefreshTarget:self
                                                        andRefreshAction:@selector(refreshTriggered)];
+    self.pongRefreshControl.backgroundColor = [UIColor colorWithRed:0.078f green:0.627f blue:0.702f alpha:1.0f];
+    self.pongRefreshControl.foregroundColor = [UIColor colorWithRed:0.871f green:0.204f blue:0.114f alpha:1.0f];
 }
 
 //Resetting the refresh control if the user leaves the screen
@@ -72,13 +80,15 @@
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
     [self.pongRefreshControl scrollViewDidEndDragging];
+    
+    [self setScrollMeLabelText:@"Scroll Me!"];
 }
 
 #pragma mark - Listening for the user to trigger a refresh
 
 - (void)refreshTriggered
 {
-
+    
 }
 
 #pragma mark - Resetting the refresh control when loading is done
@@ -86,6 +96,13 @@
 - (IBAction)doneLoadingButtonPressed:(id)sender
 {
     [self.pongRefreshControl finishedLoading];
+}
+
+#pragma mark - Changing the "Scroll Me!" label
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    [self setScrollMeLabelText:@":D"];
 }
 
 @end

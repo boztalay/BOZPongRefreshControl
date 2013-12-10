@@ -9,7 +9,9 @@
 #import <UIKit/UIKit.h>
 #import "BOZPongRefreshControl.h"
 
-@interface BOZScrollViewController : UIViewController <UIScrollViewDelegate>
+@interface BOZScrollViewController : UIViewController <UIScrollViewDelegate> {
+    UILabel* scrollMeLabel;
+}
 
 @property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
 

@@ -28,6 +28,8 @@
     self.pongRefreshControl = [BOZPongRefreshControl attachToTableView:self.tableView
                                                      withRefreshTarget:self
                                                       andRefreshAction:@selector(refreshTriggered)];
+    self.pongRefreshControl.backgroundColor = [UIColor whiteColor];
+    self.pongRefreshControl.foregroundColor = [UIColor blackColor];
 }
 
 //Resetting the refresh control if the user leaves the screen
@@ -78,7 +80,9 @@
     }
     
     cell.textLabel.text = [NSString stringWithFormat:@"Row %d", indexPath.row];
-    cell.contentView.backgroundColor = [UIColor colorWithWhite:0.75f alpha:1.0f];
+    
+    CGFloat redComponent = 1.0f - (float)(indexPath.row + 1) / (float)([tableView numberOfRowsInSection:0] + 1);
+    cell.contentView.backgroundColor = [UIColor colorWithRed:redComponent green:0.1f blue:0.1f alpha:1.0f];
     
     return cell;
 }

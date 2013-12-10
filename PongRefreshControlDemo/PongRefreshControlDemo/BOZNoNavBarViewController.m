@@ -28,6 +28,7 @@
     self.pongRefreshControl = [BOZPongRefreshControl attachToTableView:self.tableView
                                                      withRefreshTarget:self
                                                       andRefreshAction:@selector(refreshTriggered)];
+    self.pongRefreshControl.foregroundColor = [UIColor greenColor];
 }
 
 //Resetting the refresh control if the user leaves the screen

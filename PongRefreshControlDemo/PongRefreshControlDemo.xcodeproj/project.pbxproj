@@ -135,9 +135,9 @@
 				FBB15611185260B90072DCEC /* BOZAppDelegate.m */,
 				FBB156431852C4EC0072DCEC /* Storyboard.storyboard */,
 				FBB156461852D73A0072DCEC /* Demo View Controller */,
-				FBB156471852D7500072DCEC /* No Nav Bar View Controller */,
-				FBB1564F1852F1110072DCEC /* Regular View Controller */,
 				FBB156541852F9AE0072DCEC /* Scroll View Controller */,
+				FBB1564F1852F1110072DCEC /* Regular View Controller */,
+				FBB156471852D7500072DCEC /* No Nav Bar View Controller */,
 				FBB15613185260B90072DCEC /* Images.xcassets */,
 				FBB15608185260B90072DCEC /* Supporting Files */,
 			);
