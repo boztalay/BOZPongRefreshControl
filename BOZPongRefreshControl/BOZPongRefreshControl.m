@@ -219,7 +219,7 @@ typedef enum {
 
 #pragma mark - Listening to scrolling
 
-- (void)scrollViewScrolled
+- (void)scrollViewDidScroll
 {
     if(state == BOZPongRefreshControlStateIdle) {
         //Moving and rotating the paddles and ball into place
@@ -241,7 +241,7 @@ typedef enum {
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-- (void)userStoppedDragging
+- (void)scrollViewDidEndDragging
 {
     if(state == BOZPongRefreshControlStateIdle) {
         if(self.scrollView.contentOffset.y < -originalTopContentInset) {

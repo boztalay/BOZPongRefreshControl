@@ -25,9 +25,9 @@
 
 - (void)viewDidLayoutSubviews
 {
-    self.pongRefreshControl = [BOZPongRefreshControl attachToScrollView:self.tableView
-                                                            withTarget:self
-                                                             andAction:@selector(refreshTriggered)];
+    self.pongRefreshControl = [BOZPongRefreshControl attachToTableView:self.tableView
+                                                     withRefreshTarget:self
+                                                      andRefreshAction:@selector(refreshTriggered)];
 }
 
 //Resetting the refresh control if the user leaves the screen
@@ -40,12 +40,12 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-    [self.pongRefreshControl scrollViewScrolled];
+    [self.pongRefreshControl scrollViewDidScroll];
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
-    [self.pongRefreshControl userStoppedDragging];
+    [self.pongRefreshControl scrollViewDidEndDragging];
 }
 
 #pragma mark - Listening for the user to trigger a refresh
