@@ -79,10 +79,9 @@
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
     }
     
-    cell.textLabel.text = [NSString stringWithFormat:@"Row %d", indexPath.row];
-    
-    CGFloat redComponent = 1.0f - (float)(indexPath.row + 1) / (float)([tableView numberOfRowsInSection:0] + 1);
-    cell.contentView.backgroundColor = [UIColor colorWithRed:redComponent green:0.1f blue:0.1f alpha:1.0f];
+    CGFloat alphaComponent = 1.0f - (float)(indexPath.row + 1) / (float)([tableView numberOfRowsInSection:0] + 1);
+    cell.contentView.backgroundColor = [UIColor colorWithRed:0.373f green:0.820f blue:0.294f alpha:alphaComponent];
+    cell.backgroundColor = [UIColor whiteColor];
     
     return cell;
 }
