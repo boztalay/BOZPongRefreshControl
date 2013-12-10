@@ -14,9 +14,9 @@
 #define DEFAULT_FOREGROUND_COLOR [UIColor whiteColor]
 #define DEFAULT_BACKGROUND_COLOR [UIColor colorWithWhite:0.10f alpha:1.0f]
 
-#define BALL_END_TO_END_DURATION 1.0f
+#define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 1.0f
 
-#define PI 3.14159265359
+#define PI 3.14159265359f
 
 typedef enum {
     BOZPongRefreshControlStateIdle = 0,
@@ -190,6 +190,8 @@ typedef enum {
     ballView.center = ballIdleOrigin;
     ballView.backgroundColor = self.foregroundColor;
     
+    self.totalHorizontalTravelTimeForBall = DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL;
+    
     [self addSubview:ballView];
 }
 
@@ -348,35 +350,30 @@ typedef enum {
 
 #pragma mark - Playing pong
 
+#pragma mark Starting the game
+
 - (void)startPong
 {
     ballOrigin = ballView.center;
-    [self pickRandomBallDestination];
+    [self pickRandomStartingBallDestination];
     [self determineNextPaddleDestinations];
-    [self animateBallAndPaddles];
+    [self animateBallAndPaddlesToDestinations];
 }
 
-- (void)animateBallAndPaddles
+- (void)pickRandomStartingBallDestination
 {
-    CGFloat endToEndDistance = [self rightPaddleContactX] - [self leftPaddleContactX];
-    CGFloat horizontalProportionLeft = fabsf((ballDestination.x - ballView.center.x) / endToEndDistance);
-    CGFloat animationDuration = BALL_END_TO_END_DURATION * horizontalProportionLeft;
-    
-    [UIView animateWithDuration:animationDuration delay:0.0f options:UIViewAnimationOptionCurveLinear animations:^(void)
-    {
-        ballView.center = ballDestination;
-        leftPaddleView.center = CGPointMake(leftPaddleView.center.x, leftPaddleDestination);
-        rightPaddleView.center = CGPointMake(rightPaddleView.center.x, rightPaddleDestination);
+    CGFloat destinationX = [self leftPaddleContactX];
+    if(arc4random() % 2 == 1) {
+        destinationX = [self rightPaddleContactX];
     }
-    completion:^(BOOL finished)
-    {
-        if(finished) {
-            [self determineNextBallDestination];
-            [self determineNextPaddleDestinations];
-            [self animateBallAndPaddles];
-        }
-    }];
+    CGFloat destinationY = (float)(arc4random() % (int)self.frame.size.height);
+    
+    ballDestination = CGPointMake(destinationX, destinationY);
+    ballDirection = CGPointMake((ballDestination.x - ballOrigin.x), (ballDestination.y - ballOrigin.y));
+    ballDirection = [self normalizeVector:ballDirection];
 }
+
+#pragma mark Playing the game
 
 //Yeah, sorry... I'll clean this up in a bit.
 - (void)determineNextBallDestination
@@ -484,29 +481,31 @@ typedef enum {
     }
 }
 
-- (void)pickRandomBallDestination
+- (void)animateBallAndPaddlesToDestinations
 {
-    CGFloat destinationX = [self leftPaddleContactX];
-    if(arc4random() % 2 == 1) {
-        destinationX = [self rightPaddleContactX];
-    }
+    CGFloat endToEndDistance = [self rightPaddleContactX] - [self leftPaddleContactX];
+    CGFloat proportionOfHorizontalDistanceLeftForBallToTravel = fabsf((ballDestination.x - ballView.center.x) / endToEndDistance);
+    CGFloat animationDuration = self.totalHorizontalTravelTimeForBall * proportionOfHorizontalDistanceLeftForBallToTravel;
     
-    CGFloat destinationY = (float)(arc4random() % (int)self.frame.size.height);
-    
-    if(destinationY > 18.0f && destinationY <= self.frame.size.height / 2.0f) {
-        destinationY -= 13.0f;
-    } else if(destinationY >= self.frame.size.height / 2.0f && destinationY < self.frame.size.height - 18.0f) {
-        destinationY += 13.0f;
-    } else if(destinationY <= 5.0f) {
-        destinationY = 5.0f;
-    } else if(destinationY >= self.frame.size.height - 5.0f) {
-        destinationY = self.frame.size.height - 5.0f;
-    }
-    
-    ballDestination = CGPointMake(destinationX, destinationY);
-    ballDirection = CGPointMake((ballDestination.x - ballOrigin.x), (ballDestination.y - ballOrigin.y));
-    ballDirection = [self normalizeVector:ballDirection];
+    [UIView animateWithDuration:animationDuration delay:0.0f options:UIViewAnimationOptionCurveLinear animations:^(void)
+     {
+         ballView.center = ballDestination;
+         leftPaddleView.center = CGPointMake(leftPaddleView.center.x, leftPaddleDestination);
+         rightPaddleView.center = CGPointMake(rightPaddleView.center.x, rightPaddleDestination);
+     }
+     completion:^(BOOL finished)
+     {
+         if(finished) {
+             [self determineNextBallDestination];
+             [self determineNextPaddleDestinations];
+             [self animateBallAndPaddlesToDestinations];
+         }
+     }];
 }
+
+#pragma mark Helper functions for collision detection
+
+#pragma mark Ball collisions
 
 - (CGFloat)leftPaddleContactX
 {
@@ -528,6 +527,8 @@ typedef enum {
     return self.frame.size.height - (ballView.frame.size.height / 2.0f);
 }
 
+#pragma mark Paddle collisions
+
 - (CGFloat)ceilingLeftPaddleContactY
 {
     return (leftPaddleView.frame.size.height / 2.0f);
@@ -548,7 +549,7 @@ typedef enum {
     return self.frame.size.height - (rightPaddleView.frame.size.height / 2.0f);
 }
 
-#pragma mark - Etc
+#pragma mark - Etc, some basic math functions
 
 - (CGPoint)normalizeVector:(CGPoint)vector
 {

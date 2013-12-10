@@ -54,6 +54,13 @@
 @property (nonatomic) BOOL shouldCoverRefreshControlUnderHeader;
 
 /*
+ *  This controls how long it takes the ball to get from
+ *  one paddle to the other, regardless of floor/ceiling
+ *  bouncing
+ */
+@property (nonatomic) CGFloat totalHorizontalTravelTimeForBall;
+
+/*
  *  Call this function when whatever loading task you're doing
  *  is done. This will reset the pong refresh control and hide
  *  it. It's also a good idea to call this if your view is
