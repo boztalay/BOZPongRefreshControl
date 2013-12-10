@@ -5,6 +5,9 @@
 //  Created by Ben Oztalay on 11/22/13.
 //  Copyright (c) 2013 Ben Oztalay. All rights reserved.
 //
+//  Version 0.1
+//  https://www.github.com/boztalay/BOZPongRefreshControl
+//
 
 #import <UIKit/UIKit.h>
 

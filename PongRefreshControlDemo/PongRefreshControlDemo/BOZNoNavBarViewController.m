@@ -14,7 +14,7 @@
 {
     [super viewDidLoad];
     
-    /* NOTE: Do not attach the refresh control in viewDidLoad!
+    /* NOTE: Do NOT attach the refresh control in viewDidLoad!
      * If you do this here, it'll act very funny if you have
      * a navigation bar or other such similar thing that iOS 7
      * automatically offsets content for. You have to wait for

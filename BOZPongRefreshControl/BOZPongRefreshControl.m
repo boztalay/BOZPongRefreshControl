@@ -5,6 +5,9 @@
 //  Created by Ben Oztalay on 11/22/13.
 //  Copyright (c) 2013 Ben Oztalay. All rights reserved.
 //
+//  Version 0.1
+//  https://www.github.com/boztalay/BOZPongRefreshControl
+//
 
 #import "BOZPongRefreshControl.h"
 
@@ -373,42 +376,25 @@ typedef enum {
 
 #pragma mark Playing the game
 
-//Yeah, sorry... I'll clean this up in a bit.
+#pragma mark Ball behavior
+
 - (void)determineNextBallDestination
 {
     CGFloat newBallDestinationX;
     CGFloat newBallDestinationY;
     
-    CGPoint reflectedBallDirection;
+    ballDirection = [self determineReflectedDirectionOfBall];
     
-    if([self didBallHitWall]) {
-        reflectedBallDirection = CGPointMake(ballDirection.x, -ballDirection.y);
-    } else if([self didBallHitPaddle]) {
-        reflectedBallDirection = CGPointMake(-ballDirection.x, ballDirection.y);
-    }
+    CGFloat verticalDistanceToNextWall = [self calculateVerticalDistanceFromBallToNextWall];
+    CGFloat distanceToNextWall = verticalDistanceToNextWall / ballDirection.y;
+    CGFloat horizontalDistanceToNextWall = distanceToNextWall * ballDirection.x;
     
-    CGFloat distanceToNextWall;
-    CGFloat verticalDistanceToNextWall;
+    CGFloat horizontalDistanceToNextPaddle = [self calculateHorizontalDistanceFromBallToNextPaddle];
     
-    if(reflectedBallDirection.y > 0.0f) {
-        verticalDistanceToNextWall = [self floorContactY] - ballDestination.y;
-    } else {
-        verticalDistanceToNextWall = [self ceilingContactY] - ballDestination.y;
-    }
-    distanceToNextWall = verticalDistanceToNextWall / reflectedBallDirection.y;
-    
-    CGFloat horizontalDistanceToNextWall = distanceToNextWall * reflectedBallDirection.x;
-    CGFloat horizontalDistanceToNextPaddle;
-    
-    if(reflectedBallDirection.x < 0.0f) {
-        horizontalDistanceToNextPaddle = [self leftPaddleContactX] - ballDestination.x;
-    } else {
-        horizontalDistanceToNextPaddle = [self rightPaddleContactX] - ballDestination.x;
-    }
-    
-    if(fabsf(horizontalDistanceToNextPaddle) < fabsf(horizontalDistanceToNextWall)) {
+    if(fabs(horizontalDistanceToNextPaddle) < fabs(horizontalDistanceToNextWall)) {
         newBallDestinationX = ballDestination.x + horizontalDistanceToNextPaddle;
-        CGFloat verticalDistanceToNextPaddle = fabs(horizontalDistanceToNextPaddle) * reflectedBallDirection.y;
+        
+        CGFloat verticalDistanceToNextPaddle = fabs(horizontalDistanceToNextPaddle) * ballDirection.y;
         newBallDestinationY = ballDestination.y + verticalDistanceToNextPaddle;
     } else {
         newBallDestinationX = ballDestination.x + horizontalDistanceToNextWall;
@@ -417,8 +403,19 @@ typedef enum {
     
     ballOrigin = ballDestination;
     ballDestination = CGPointMake(newBallDestinationX, newBallDestinationY);
-    ballDirection = CGPointMake((ballDestination.x - ballOrigin.x), (ballDestination.y - ballOrigin.y));
-    ballDirection = [self normalizeVector:ballDirection];
+}
+
+- (CGPoint)determineReflectedDirectionOfBall
+{
+    CGPoint reflectedBallDirection;
+    
+    if([self didBallHitWall]) {
+        reflectedBallDirection =  CGPointMake(ballDirection.x, -ballDirection.y);
+    } else if([self didBallHitPaddle]) {
+        reflectedBallDirection =  CGPointMake(-ballDirection.x, ballDirection.y);
+    }
+    
+    return reflectedBallDirection;
 }
 
 - (BOOL)didBallHitWall
@@ -431,41 +428,81 @@ typedef enum {
     return ([self isFloat:ballDestination.x equalToFloat:[self leftPaddleContactX]] || [self isFloat:ballDestination.x equalToFloat:[self rightPaddleContactX]]);
 }
 
+- (CGFloat)calculateVerticalDistanceFromBallToNextWall
+{
+    if(ballDirection.y > 0.0f) {
+        return [self floorContactY] - ballDestination.y;
+    } else {
+        return [self ceilingContactY] - ballDestination.y;
+    }
+}
+
+- (CGFloat)calculateHorizontalDistanceFromBallToNextPaddle
+{
+    if(ballDirection.x < 0.0f) {
+        return [self leftPaddleContactX] - ballDestination.x;
+    } else {
+        return [self rightPaddleContactX] - ballDestination.x;
+    }
+}
+
+#pragma mark Paddle behavior
+
 - (void)determineNextPaddleDestinations
 {
-    static CGFloat lazyFactor = 0.25f;
-    static CGFloat normalFactor = 0.5f;
-    static CGFloat holyCrapFactor = 1.0f;
+    static CGFloat lazySpeedFactor = 0.25f;
+    static CGFloat normalSpeedFactor = 0.5f;
+    static CGFloat holyCrapSpeedFactor = 1.0f;
     
     CGFloat leftPaddleVerticalDistanceToBallDestination = ballDestination.y - leftPaddleView.center.y;
     CGFloat rightPaddleVerticalDistanceToBallDestination = ballDestination.y - rightPaddleView.center.y;
+
+    CGFloat leftPaddleOffset;
+    CGFloat rightPaddleOffset;
     
+    //Determining how far each paddle will mode
     if(ballDirection.x < 0.0f) {
-        //Going toward the left paddle
-        
-        //Destination is the left paddle
-        if([self isFloat:ballDestination.x equalToFloat:[self leftPaddleContactX]]) {
-            leftPaddleDestination = leftPaddleView.center.y + (leftPaddleVerticalDistanceToBallDestination * holyCrapFactor);
-            rightPaddleDestination = rightPaddleView.center.y + (rightPaddleVerticalDistanceToBallDestination * lazyFactor);
+        //Ball is going toward the left paddle
+
+        if([self isBallDestinationIsTheLeftPaddle]) {
+            leftPaddleOffset = (leftPaddleVerticalDistanceToBallDestination * holyCrapSpeedFactor);
+            rightPaddleOffset = (rightPaddleVerticalDistanceToBallDestination * lazySpeedFactor);
         } else {
             //Destination is a wall
-            leftPaddleDestination = leftPaddleView.center.y + (leftPaddleVerticalDistanceToBallDestination * normalFactor);
-            rightPaddleDestination = rightPaddleView.center.y - (rightPaddleVerticalDistanceToBallDestination * normalFactor);
+            leftPaddleOffset = (leftPaddleVerticalDistanceToBallDestination * normalSpeedFactor);
+            rightPaddleOffset = -(rightPaddleVerticalDistanceToBallDestination * normalSpeedFactor);
         }
     } else {
-        //Going toward the right paddle
+        //Ball is going toward the right paddle
         
-        //Destination is the right paddle
-        if([self isFloat:ballDestination.x equalToFloat:[self rightPaddleContactX]]) {
-            leftPaddleDestination = leftPaddleView.center.y + (leftPaddleVerticalDistanceToBallDestination * lazyFactor);
-            rightPaddleDestination = rightPaddleView.center.y + (rightPaddleVerticalDistanceToBallDestination * holyCrapFactor);
+        if([self isBallDestinationIsTheRightPaddle]) {
+            leftPaddleOffset = (leftPaddleVerticalDistanceToBallDestination * lazySpeedFactor);
+            rightPaddleOffset = (rightPaddleVerticalDistanceToBallDestination * holyCrapSpeedFactor);
         } else {
             //Destination is a wall
-            leftPaddleDestination = leftPaddleView.center.y - (leftPaddleVerticalDistanceToBallDestination * normalFactor);
-            rightPaddleDestination = rightPaddleView.center.y + (rightPaddleVerticalDistanceToBallDestination * normalFactor);
+            leftPaddleOffset = -(leftPaddleVerticalDistanceToBallDestination * normalSpeedFactor);
+            rightPaddleOffset = (rightPaddleVerticalDistanceToBallDestination * normalSpeedFactor);
         }
     }
     
+    leftPaddleDestination = leftPaddleView.center.y + leftPaddleOffset;
+    rightPaddleDestination = rightPaddleView.center.y + rightPaddleOffset;
+
+    [self capPaddleDestinationsToWalls];
+}
+
+- (BOOL)isBallDestinationIsTheLeftPaddle
+{
+    return ([self isFloat:ballDestination.x equalToFloat:[self leftPaddleContactX]]);
+}
+
+- (BOOL)isBallDestinationIsTheRightPaddle
+{
+    return ([self isFloat:ballDestination.x equalToFloat:[self rightPaddleContactX]]);
+}
+
+- (void)capPaddleDestinationsToWalls
+{
     if(leftPaddleDestination < [self ceilingLeftPaddleContactY]) {
         leftPaddleDestination = [self ceilingLeftPaddleContactY];
     } else if(leftPaddleDestination > [self floorLeftPaddleContactY]) {
@@ -478,6 +515,8 @@ typedef enum {
         rightPaddleDestination = [self floorRightPaddleContactY];
     }
 }
+
+#pragma mark Actually animating the balls and paddles to where they need to go
 
 - (void)animateBallAndPaddlesToDestinations
 {
