@@ -78,7 +78,7 @@
 
 - (void)refreshTriggered
 {
-    
+
 }
 
 #pragma mark - Resetting the refresh control when loading is done

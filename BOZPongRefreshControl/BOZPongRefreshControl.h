@@ -10,18 +10,15 @@
 
 @interface BOZPongRefreshControl : UIView <UIScrollViewDelegate>
 
-@property (weak, nonatomic) UIScrollView* scrollView;
-@property (weak, nonatomic) UIViewController* target;
-@property (nonatomic) SEL refreshAction;
-
 + (BOZPongRefreshControl*)attachToScrollView:(UIScrollView*)scrollView
-                                  withTarget:(UIViewController*)target
-                                   andAction:(SEL)refreshAction;
+                           withRefreshTarget:(id)refreshTarget
+                            andRefreshAction:(SEL)refreshAction;
 
-- (id)initWithFrame:(CGRect)frame
-      andScrollView:(UIScrollView*)scrollView
-          andTarget:(UIViewController*)target
-   andRefreshAction:(SEL)refreshAction;
++ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView
+                          withRefreshTarget:(id)refreshTarget
+                           andRefreshAction:(SEL)refreshAction;
+
+@property (strong, nonatomic) UIColor* foregroundColor;
 
 - (void)finishedLoading;
 

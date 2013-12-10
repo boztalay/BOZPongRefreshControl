@@ -11,7 +11,8 @@
 #define REFRESH_CONTROL_HEIGHT 65.0f
 #define HALF_REFRESH_CONTROL_HEIGHT (REFRESH_CONTROL_HEIGHT / 2.0f)
 
-#define GAME_COLOR [UIColor whiteColor]
+#define DEFAULT_FOREGROUND_COLOR [UIColor whiteColor]
+#define DEFAULT_BACKGROUND_COLOR [UIColor colorWithWhite:0.10f alpha:1.0f]
 
 #define BALL_END_TO_END_DURATION 1.0f
 
@@ -31,7 +32,6 @@ typedef enum {
     UIView* leftPaddleView;
     UIView* rightPaddleView;
     UIView* ballView;
-    UILabel* releaseToRefreshLabel;
     
     CGPoint leftPaddleIdleOrigin;
     CGPoint rightPaddleIdleOrigin;
@@ -45,53 +45,83 @@ typedef enum {
     CGFloat rightPaddleDestination;
 }
 
+@property (strong, nonatomic) UIScrollView* scrollView;
+@property (strong, nonatomic) id refreshTarget;
+@property (nonatomic) SEL refreshAction;
+
 @end
 
 @implementation BOZPongRefreshControl
 
-#pragma mark - Init
+#pragma mark - Attaching a pong refresh control to a UIScrollView or UITableView
 
+#pragma mark UIScrollView
 + (BOZPongRefreshControl*)attachToScrollView:(UIScrollView*)scrollView
-                                  withTarget:(UIViewController*)target
-                                   andAction:(SEL)refreshAction
+                           withRefreshTarget:(id)refreshTarget
+                            andRefreshAction:(SEL)refreshAction
 {
-    CGRect pongRefreshControlFrame;
-    
-    if([scrollView isKindOfClass:[UITableView class]]) {
-        UITableView* tableView = (UITableView*)scrollView;
-        
-        if(tableView.tableHeaderView != nil && [tableView.tableHeaderView isKindOfClass:[BOZPongRefreshControl class]]) {
-            return (BOZPongRefreshControl*)tableView.tableHeaderView;
-        }
-        
-        pongRefreshControlFrame = CGRectMake(0.0f, 0.0f, scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT);
-    } else {
-        for(UIView* subview in scrollView.subviews) {
-            if([subview isKindOfClass:[BOZPongRefreshControl class]]) {
-                return (BOZPongRefreshControl*)subview;
-            }
-        }
-        
-        pongRefreshControlFrame = CGRectMake(0.0f, -REFRESH_CONTROL_HEIGHT, scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT);
+    BOOL isScrollViewATableView = [scrollView isKindOfClass:[UITableView class]];
+    if(isScrollViewATableView) {
+        return [self attachToTableView:(UITableView*)scrollView
+                     withRefreshTarget:refreshTarget
+                      andRefreshAction:refreshAction];
     }
     
-    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:pongRefreshControlFrame
+    BOZPongRefreshControl* existingPongRefreshControl = [self findPongRefreshControlInScrollView:scrollView];
+    if(existingPongRefreshControl != nil) {
+        return existingPongRefreshControl;
+    }
+    
+    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, -REFRESH_CONTROL_HEIGHT, scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT)
                                                                                andScrollView:scrollView
-                                                                                   andTarget:target
+                                                                            andRefreshTarget:refreshTarget
                                                                             andRefreshAction:refreshAction];
 
-    if([scrollView isKindOfClass:[UITableView class]]) {
-        [(UITableView*)scrollView setTableHeaderView:pongRefreshControl];
-    } else {
-        [scrollView addSubview:pongRefreshControl];
+    [scrollView addSubview:pongRefreshControl];
+
+    return pongRefreshControl;
+}
+
++ (BOZPongRefreshControl*)findPongRefreshControlInScrollView:(UIScrollView*)scrollView
+{
+    for(UIView* subview in scrollView.subviews) {
+        if([subview isKindOfClass:[BOZPongRefreshControl class]]) {
+            return (BOZPongRefreshControl*)subview;
+        }
     }
+    
+    return nil;
+}
+
+#pragma mark UITableVIew
++ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView
+                          withRefreshTarget:(id)refreshTarget
+                           andRefreshAction:(SEL)refreshAction
+{
+    if([self doesTableViewAlreadyHaveAPongRefreshControl:tableView]) {
+        return (BOZPongRefreshControl*)tableView.tableHeaderView;
+    }
+    
+    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)
+                                                                               andScrollView:(UIScrollView*)tableView
+                                                                            andRefreshTarget:refreshTarget
+                                                                            andRefreshAction:refreshAction];
+    
+    [tableView setTableHeaderView:pongRefreshControl];
     
     return pongRefreshControl;
 }
 
++ (BOOL)doesTableViewAlreadyHaveAPongRefreshControl:(UITableView*)tableView
+{
+    return (tableView.tableHeaderView != nil && [tableView.tableHeaderView isKindOfClass:[BOZPongRefreshControl class]]);
+}
+
+#pragma mark - Initializing a new pong refresh control
+
 - (id)initWithFrame:(CGRect)frame
       andScrollView:(UIScrollView*)scrollView
-          andTarget:(UIViewController*)target
+   andRefreshTarget:(id)refreshTarget
    andRefreshAction:(SEL)refreshAction
 {
     self = [super initWithFrame:frame];
@@ -99,47 +129,62 @@ typedef enum {
         self.clipsToBounds = YES;
         
         self.scrollView = scrollView;
-        self.target = target;
+        self.refreshTarget = refreshTarget;
         self.refreshAction = refreshAction;
         
+        [self calculateOriginalTopContentInset];
+        [self setNewTopContentInsetOnScrollView];
+        
+        self.foregroundColor = DEFAULT_FOREGROUND_COLOR;
+        self.backgroundColor = DEFAULT_BACKGROUND_COLOR;
+        
+        [self setUpPaddles];
+        [self setUpBall];
+        
         state = BOZPongRefreshControlStateIdle;
-        
-        originalTopContentInset = self.scrollView.contentInset.top;
-        if(![scrollView isKindOfClass:[UITableView class]]) {
-            originalTopContentInset += REFRESH_CONTROL_HEIGHT;
-        }
-        
-        UIEdgeInsets currentInsets = self.scrollView.contentInset;
-        currentInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
-        self.scrollView.contentInset = currentInsets;
-        
-        leftPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.25f, self.frame.size.height);
-        leftPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
-        leftPaddleView.center = leftPaddleIdleOrigin;
-        leftPaddleView.backgroundColor = GAME_COLOR;
-        
-        rightPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.75f, self.frame.size.height);
-        rightPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
-        rightPaddleView.center = rightPaddleIdleOrigin;
-        rightPaddleView.backgroundColor = GAME_COLOR;
-        
-        ballIdleOrigin = CGPointMake(self.frame.size.width * 0.50f, 0.0f);
-        ballView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 3.0f, 3.0f)];
-        ballView.center = ballIdleOrigin;
-        ballView.backgroundColor = GAME_COLOR;
-        
-        [self addSubview:leftPaddleView];
-        [self addSubview:rightPaddleView];
-        [self addSubview:ballView];
-        
-        self.backgroundColor = [UIColor colorWithWhite:0.10f alpha:1.0f];
     }
     return self;
 }
 
-- (BOOL)isiOS7OrAbove
+- (void)calculateOriginalTopContentInset
 {
-    return ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0f);
+    originalTopContentInset = self.scrollView.contentInset.top;
+    if(![self.scrollView isKindOfClass:[UITableView class]]) {
+        originalTopContentInset += REFRESH_CONTROL_HEIGHT;
+    }
+}
+
+- (void)setNewTopContentInsetOnScrollView
+{
+    UIEdgeInsets newContentInset = self.scrollView.contentInset;
+    newContentInset.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
+    self.scrollView.contentInset = newContentInset;
+}
+
+- (void)setUpPaddles
+{
+    leftPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.25f, self.frame.size.height);
+    leftPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
+    leftPaddleView.center = leftPaddleIdleOrigin;
+    leftPaddleView.backgroundColor = self.foregroundColor;
+    
+    rightPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.75f, self.frame.size.height);
+    rightPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
+    rightPaddleView.center = rightPaddleIdleOrigin;
+    rightPaddleView.backgroundColor = self.foregroundColor;
+    
+    [self addSubview:leftPaddleView];
+    [self addSubview:rightPaddleView];
+}
+
+- (void)setUpBall
+{
+    ballIdleOrigin = CGPointMake(self.frame.size.width * 0.50f, 0.0f);
+    ballView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 3.0f, 3.0f)];
+    ballView.center = ballIdleOrigin;
+    ballView.backgroundColor = self.foregroundColor;
+    
+    [self addSubview:ballView];
 }
 
 #pragma mark - Resetting after loading finished
@@ -182,8 +227,6 @@ typedef enum {
         CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.scrollView.contentOffset.y - originalTopContentInset;
         CGFloat offset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
         
-//        NSLog(@"contentOffset: %f; rawOffset: %f; offset: %f", self.tableView.contentOffset.y, rawOffset, offset);
-        
         ballView.center = CGPointMake(ballIdleOrigin.x, ballIdleOrigin.y + offset);
         leftPaddleView.center = CGPointMake(leftPaddleIdleOrigin.x, leftPaddleIdleOrigin.y - offset);
         rightPaddleView.center = CGPointMake(rightPaddleIdleOrigin.x, rightPaddleIdleOrigin.y - offset);
@@ -193,8 +236,6 @@ typedef enum {
         
         leftPaddleView.transform = CGAffineTransformMakeRotation(angleToRotate);
         rightPaddleView.transform = CGAffineTransformMakeRotation(-angleToRotate);
-        
-        releaseToRefreshLabel.alpha = proportionToMaxOffset;
     }
 }
 
@@ -220,7 +261,7 @@ typedef enum {
             [self animateBallAndPaddles];
             
             //Let the target know
-            [self.target performSelector:self.refreshAction];
+            [self.refreshTarget performSelector:self.refreshAction];
         }
     }
 }
