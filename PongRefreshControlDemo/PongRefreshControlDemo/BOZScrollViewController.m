@@ -19,15 +19,18 @@
     [super viewDidLoad];
 
     self.scrollView.contentSize = CGSizeMake(self.scrollView.frame.size.width, SCROLLVIEW_CONTENT_HEIGHT);
+    
     for(int i = 0; i < NUM_STRIPES; i++) {
         UIView* view = [[UIView alloc] initWithFrame:CGRectMake(0.0f, i * STRIPE_HEIGHT, self.scrollView.frame.size.width, STRIPE_HEIGHT)];
-        CGFloat proportionOfScrollViewFilled = ((float)i / (float)NUM_STRIPES);
-        view.backgroundColor = [UIColor colorWithWhite:proportionOfScrollViewFilled alpha:1.0f];
+        
+        CGFloat proportionOfScrollViewFilled = ((float)(i + 1) / (NUM_STRIPES + 1.0f));
+        CGFloat whiteValue = 1.0f - proportionOfScrollViewFilled;
+        
+        view.backgroundColor = [UIColor colorWithWhite:whiteValue alpha:1.0f];
         
         if(i == 0) {
             UILabel* scrollMeLabel = [[UILabel alloc] initWithFrame:CGRectZero];
             scrollMeLabel.text = @"Scroll Me!";
-            scrollMeLabel.textColor = [UIColor whiteColor];
             [scrollMeLabel sizeToFit];
             scrollMeLabel.center = CGPointMake(view.frame.size.width / 2.0f, view.frame.size.height / 2.0f);
             [view addSubview:scrollMeLabel];
