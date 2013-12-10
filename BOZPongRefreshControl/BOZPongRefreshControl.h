@@ -13,6 +13,8 @@
 
 @interface BOZPongRefreshControl : UIView <UIScrollViewDelegate>
 
+#pragma mark - Attaching a pong refresh control
+
 /*
  *  Call this function to attach a pong refresh control to
  *  a UIScrollView. Keep in mind that it does this by adding
@@ -42,26 +44,7 @@
                           withRefreshTarget:(id)refreshTarget
                            andRefreshAction:(SEL)refreshAction;
 
-/*
- *  This controls the color of the paddles and ball. Use
- *  the standard backgroundColor property to set the
- *  background color.
- */
-@property (strong, nonatomic) UIColor* foregroundColor;
-
-/*
- *  This controls whether the refresh control is covered
- *  under translucent headers by a view that matches the
- *  background color of its parent UIScrollView
- */
-@property (nonatomic) BOOL shouldCoverRefreshControlUnderHeader;
-
-/*
- *  This controls how long it takes the ball to get from
- *  one paddle to the other, regardless of floor/ceiling
- *  bouncing
- */
-@property (nonatomic) CGFloat totalHorizontalTravelTimeForBall;
+#pragma mark - Functions required to use a pong refresh control
 
 /*
  *  Call this function when whatever loading task you're doing
@@ -87,5 +70,28 @@
  *  be triggered.
  */
 - (void)scrollViewDidEndDragging;
+
+#pragma mark - Configurable properties
+
+/*
+ *  This controls the color of the paddles and ball. Use
+ *  the standard backgroundColor property to set the
+ *  background color.
+ */
+@property (strong, nonatomic) UIColor* foregroundColor;
+
+/*
+ *  This controls whether the refresh control is covered
+ *  under translucent headers by a view that matches the
+ *  background color of its parent UIScrollView
+ */
+@property (nonatomic) BOOL shouldCoverRefreshControlUnderHeader;
+
+/*
+ *  This controls how long it takes the ball to get from
+ *  one paddle to the other, regardless of floor/ceiling
+ *  bouncing
+ */
+@property (nonatomic) CGFloat totalHorizontalTravelTimeForBall;
 
 @end
