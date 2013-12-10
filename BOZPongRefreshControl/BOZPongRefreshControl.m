@@ -207,9 +207,8 @@ typedef enum {
                         change:(NSDictionary *)change
                        context:(void *)context
 {
-    //This is to make sure the cover stays consistent with whatever background the
-    //parent UIScrollView has.
-    
+    //This is to make sure the cover stays consistent with whatever background
+    //color the parent UIScrollView has.
     if(object == self.scrollView && [keyPath isEqualToString:@"backgroundColor"]) {
         coverView.backgroundColor = self.scrollView.backgroundColor;
     }
@@ -231,58 +230,80 @@ typedef enum {
     coverView.hidden = !shouldCoverRefreshControlUnderHeader;
 }
 
-#pragma mark - Listening to scrolling
+#pragma mark - Listening to scroll delegate events
+
+#pragma mark Actively scrolling
 
 - (void)scrollViewDidScroll
 {
     if(state == BOZPongRefreshControlStateIdle) {
-        //Moving and rotating the paddles and ball into place
-        
         CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.scrollView.contentOffset.y - originalTopContentInset;
-        CGFloat offset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
+        CGFloat ballAndPaddlesOffset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
         
-        ballView.center = CGPointMake(ballIdleOrigin.x, ballIdleOrigin.y + offset);
-        leftPaddleView.center = CGPointMake(leftPaddleIdleOrigin.x, leftPaddleIdleOrigin.y - offset);
-        rightPaddleView.center = CGPointMake(rightPaddleIdleOrigin.x, rightPaddleIdleOrigin.y - offset);
+        [self offsetBallAndPaddlesBy:ballAndPaddlesOffset];
+        [self rotatePaddlesAccordingToOffset:ballAndPaddlesOffset];
         
-        CGFloat proportionToMaxOffset = (offset / HALF_REFRESH_CONTROL_HEIGHT);
-        CGFloat angleToRotate = PI * proportionToMaxOffset;
-        
-        leftPaddleView.transform = CGAffineTransformMakeRotation(angleToRotate);
-        rightPaddleView.transform = CGAffineTransformMakeRotation(-angleToRotate);
-        
-        //Moving the cover out of place
-        coverView.center = CGPointMake(self.center.x, self.center.y - rawOffset);
+        [self offsetCoverBy:rawOffset];
     }
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+- (void)offsetBallAndPaddlesBy:(CGFloat)offset
+{
+    ballView.center = CGPointMake(ballIdleOrigin.x, ballIdleOrigin.y + offset);
+    leftPaddleView.center = CGPointMake(leftPaddleIdleOrigin.x, leftPaddleIdleOrigin.y - offset);
+    rightPaddleView.center = CGPointMake(rightPaddleIdleOrigin.x, rightPaddleIdleOrigin.y - offset);
+}
+
+- (void)rotatePaddlesAccordingToOffset:(CGFloat)offset
+{
+    CGFloat proportionOfMaxOffset = (offset / HALF_REFRESH_CONTROL_HEIGHT);
+    CGFloat angleToRotate = PI * proportionOfMaxOffset;
+    
+    leftPaddleView.transform = CGAffineTransformMakeRotation(angleToRotate);
+    rightPaddleView.transform = CGAffineTransformMakeRotation(-angleToRotate);
+}
+
+- (void)offsetCoverBy:(CGFloat)offset
+{
+    coverView.center = CGPointMake(self.center.x, self.center.y - offset);
+}
+
+#pragma mark Letting go of the scroll view, checking for refresh trigger
+
 - (void)scrollViewDidEndDragging
 {
     if(state == BOZPongRefreshControlStateIdle) {
-        if(self.scrollView.contentOffset.y < -originalTopContentInset) {
+        if([self didUserScrollFarEnoughToTriggerRefresh]) {
             state = BOZPongRefreshControlStateRefreshing;
         
-            //Animate back into place
-            [UIView animateWithDuration:0.2f animations:^(void) {
-                UIEdgeInsets newInsets = self.scrollView.contentInset;
-                newInsets.top = originalTopContentInset;
-                self.scrollView.contentInset = newInsets;
-            }];
-            
-            //Start the game
-            ballOrigin = ballView.center;
-            [self pickRandomBallDestination];
-            [self determineNextPaddleDestinations];
-            [self animateBallAndPaddles];
-            
-            //Let the target know
-            [self.refreshTarget performSelector:self.refreshAction];
+            [self animateScrollViewBackIntoPlaceWithRefreshControlShowing];
+            [self startPong];
+            [self notifyTargetOfRefreshTrigger];
         }
     }
 }
-#pragma clang diagnostic pop
+
+- (BOOL)didUserScrollFarEnoughToTriggerRefresh
+{
+    return (self.scrollView.contentOffset.y < -originalTopContentInset);
+}
+
+- (void)animateScrollViewBackIntoPlaceWithRefreshControlShowing
+{
+    [UIView animateWithDuration:0.2f animations:^(void) {
+        UIEdgeInsets newInsets = self.scrollView.contentInset;
+        newInsets.top = originalTopContentInset;
+        self.scrollView.contentInset = newInsets;
+    }];
+}
+
+- (void)notifyTargetOfRefreshTrigger
+{
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        [self.refreshTarget performSelector:self.refreshAction];
+    #pragma clang diagnostic pop
+}
 
 #pragma mark - Resetting after loading finished
 
@@ -316,7 +337,15 @@ typedef enum {
      }];
 }
 
-#pragma mark - Controlling the ball and paddle once a refresh starts
+#pragma mark - Playing pong
+
+- (void)startPong
+{
+    ballOrigin = ballView.center;
+    [self pickRandomBallDestination];
+    [self determineNextPaddleDestinations];
+    [self animateBallAndPaddles];
+}
 
 - (void)animateBallAndPaddles
 {
