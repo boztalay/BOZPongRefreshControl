@@ -56,6 +56,7 @@ typedef enum {
 #pragma mark - Attaching a pong refresh control to a UIScrollView or UITableView
 
 #pragma mark UIScrollView
+
 + (BOZPongRefreshControl*)attachToScrollView:(UIScrollView*)scrollView
                            withRefreshTarget:(id)refreshTarget
                             andRefreshAction:(SEL)refreshAction
@@ -93,7 +94,8 @@ typedef enum {
     return nil;
 }
 
-#pragma mark UITableVIew
+#pragma mark UITableView
+
 + (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView
                           withRefreshTarget:(id)refreshTarget
                            andRefreshAction:(SEL)refreshAction
