@@ -43,6 +43,10 @@ typedef enum {
     
     CGFloat leftPaddleDestination;
     CGFloat rightPaddleDestination;
+    
+    //This is here so the pong refresh control
+    //doesn't show under translucent headers
+    UIView* coverView;
 }
 
 @property (strong, nonatomic) UIScrollView* scrollView;
@@ -141,6 +145,8 @@ typedef enum {
         [self setUpPaddles];
         [self setUpBall];
         
+        [self setUpCoverView];
+        
         state = BOZPongRefreshControlStateIdle;
     }
     return self;
@@ -187,34 +193,42 @@ typedef enum {
     [self addSubview:ballView];
 }
 
-#pragma mark - Resetting after loading finished
-
-- (void)finishedLoading
+- (void)setUpCoverView
 {
-    if(state != BOZPongRefreshControlStateRefreshing) {
-        return;
-    }
+    coverView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
+    coverView.backgroundColor = self.scrollView.backgroundColor;
     
-    state = BOZPongRefreshControlStateResetting;
+    [self.scrollView addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew context:nil];
     
-    [UIView animateWithDuration:0.2f animations:^(void)
-    {
-        UIEdgeInsets newInsets = self.scrollView.contentInset;
-        newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
-        self.scrollView.contentInset = newInsets;
+    [self addSubview:coverView];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context
+{
+    //This is to make sure the cover stays consistent with whatever background the
+    //parent UIScrollView has.
+    
+    if(object == self.scrollView && [keyPath isEqualToString:@"backgroundColor"]) {
+        coverView.backgroundColor = self.scrollView.backgroundColor;
     }
-    completion:^(BOOL finished)
-    {
-        [leftPaddleView.layer removeAllAnimations];
-        [rightPaddleView.layer removeAllAnimations];
-        [ballView.layer removeAllAnimations];
-        
-        leftPaddleView.center = leftPaddleIdleOrigin;
-        rightPaddleView.center = rightPaddleIdleOrigin;
-        ballView.center = ballIdleOrigin;
-        
-        state = BOZPongRefreshControlStateIdle;
-    }];
+}
+
+#pragma mark - Handling various configuration changes
+
+- (void)setForegroundColor:(UIColor*)foregroundColor
+{
+    _foregroundColor = foregroundColor;
+    
+    leftPaddleView.backgroundColor = foregroundColor;
+    rightPaddleView.backgroundColor = foregroundColor;
+    ballView.backgroundColor = foregroundColor;
+}
+
+- (void)setShouldCoverRefreshControlUnderHeader:(BOOL)shouldCoverRefreshControlUnderHeader
+{
+    coverView.hidden = !shouldCoverRefreshControlUnderHeader;
 }
 
 #pragma mark - Listening to scrolling
@@ -236,6 +250,9 @@ typedef enum {
         
         leftPaddleView.transform = CGAffineTransformMakeRotation(angleToRotate);
         rightPaddleView.transform = CGAffineTransformMakeRotation(-angleToRotate);
+        
+        //Moving the cover out of place
+        coverView.center = CGPointMake(self.center.x, self.center.y - rawOffset);
     }
 }
 
@@ -267,7 +284,39 @@ typedef enum {
 }
 #pragma clang diagnostic pop
 
-#pragma mark - Controlling the ball
+#pragma mark - Resetting after loading finished
+
+- (void)finishedLoading
+{
+    if(state != BOZPongRefreshControlStateRefreshing) {
+        return;
+    }
+    
+    state = BOZPongRefreshControlStateResetting;
+    
+    [UIView animateWithDuration:0.2f animations:^(void)
+     {
+         UIEdgeInsets newInsets = self.scrollView.contentInset;
+         newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
+         self.scrollView.contentInset = newInsets;
+         
+         coverView.center = self.center;
+     }
+     completion:^(BOOL finished)
+     {
+         [leftPaddleView.layer removeAllAnimations];
+         [rightPaddleView.layer removeAllAnimations];
+         [ballView.layer removeAllAnimations];
+         
+         leftPaddleView.center = leftPaddleIdleOrigin;
+         rightPaddleView.center = rightPaddleIdleOrigin;
+         ballView.center = ballIdleOrigin;
+         
+         state = BOZPongRefreshControlStateIdle;
+     }];
+}
+
+#pragma mark - Controlling the ball and paddle once a refresh starts
 
 - (void)animateBallAndPaddles
 {

@@ -47,6 +47,13 @@
 @property (strong, nonatomic) UIColor* foregroundColor;
 
 /*
+ *  This controls whether the refresh control is covered
+ *  under translucent headers by a view that matches the
+ *  background color of its parent UIScrollView
+ */
+@property (nonatomic) BOOL shouldCoverRefreshControlUnderHeader;
+
+/*
  *  Call this function when whatever loading task you're doing
  *  is done. This will reset the pong refresh control and hide
  *  it. It's also a good idea to call this if your view is
