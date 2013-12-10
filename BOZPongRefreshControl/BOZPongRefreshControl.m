@@ -317,24 +317,33 @@ typedef enum {
     
     [UIView animateWithDuration:0.2f animations:^(void)
      {
-         UIEdgeInsets newInsets = self.scrollView.contentInset;
-         newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
-         self.scrollView.contentInset = newInsets;
-         
-         coverView.center = self.center;
+         [self resetCoverViewAndScrollViewContentInsets];
      }
      completion:^(BOOL finished)
      {
-         [leftPaddleView.layer removeAllAnimations];
-         [rightPaddleView.layer removeAllAnimations];
-         [ballView.layer removeAllAnimations];
-         
-         leftPaddleView.center = leftPaddleIdleOrigin;
-         rightPaddleView.center = rightPaddleIdleOrigin;
-         ballView.center = ballIdleOrigin;
-         
+         [self resetPaddlesAndBall];
          state = BOZPongRefreshControlStateIdle;
      }];
+}
+
+- (void)resetCoverViewAndScrollViewContentInsets
+{
+    UIEdgeInsets newInsets = self.scrollView.contentInset;
+    newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
+    self.scrollView.contentInset = newInsets;
+    
+    coverView.center = self.center;
+}
+
+- (void)resetPaddlesAndBall
+{
+    [leftPaddleView.layer removeAllAnimations];
+    [rightPaddleView.layer removeAllAnimations];
+    [ballView.layer removeAllAnimations];
+    
+    leftPaddleView.center = leftPaddleIdleOrigin;
+    rightPaddleView.center = rightPaddleIdleOrigin;
+    ballView.center = ballIdleOrigin;
 }
 
 #pragma mark - Playing pong
