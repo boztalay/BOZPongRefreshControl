@@ -16,8 +16,6 @@
 
 #define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 1.0f
 
-#define PI 3.14159265359f
-
 typedef enum {
     BOZPongRefreshControlStateIdle = 0,
     BOZPongRefreshControlStateRefreshing = 1,
@@ -43,9 +41,7 @@ typedef enum {
     
     CGFloat leftPaddleDestination;
     CGFloat rightPaddleDestination;
-    
-    //This is here so the pong refresh control
-    //doesn't show under translucent headers
+
     UIView* coverView;
 }
 
@@ -259,7 +255,7 @@ typedef enum {
 - (void)rotatePaddlesAccordingToOffset:(CGFloat)offset
 {
     CGFloat proportionOfMaxOffset = (offset / HALF_REFRESH_CONTROL_HEIGHT);
-    CGFloat angleToRotate = PI * proportionOfMaxOffset;
+    CGFloat angleToRotate = M_PI * proportionOfMaxOffset;
     
     leftPaddleView.transform = CGAffineTransformMakeRotation(angleToRotate);
     rightPaddleView.transform = CGAffineTransformMakeRotation(-angleToRotate);
