@@ -132,6 +132,8 @@ typedef enum {
 {
     self = [super initWithFrame:frame];
     if (self) {
+        self.clipsToBounds = YES;
+        
         self.scrollView = scrollView;
         self.refreshTarget = refreshTarget;
         self.refreshAction = refreshAction;
