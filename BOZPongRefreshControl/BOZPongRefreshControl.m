@@ -46,6 +46,7 @@ typedef enum {
     CGFloat rightPaddleDestination;
 
     UIView* coverView;
+    UIView* topBackgroundView;
 }
 
 @property (strong, nonatomic) UIScrollView* scrollView;
@@ -131,8 +132,6 @@ typedef enum {
 {
     self = [super initWithFrame:frame];
     if (self) {
-        self.clipsToBounds = YES;
-        
         self.scrollView = scrollView;
         self.refreshTarget = refreshTarget;
         self.refreshAction = refreshAction;
@@ -140,13 +139,13 @@ typedef enum {
         [self calculateOriginalTopContentInset];
         [self setNewTopContentInsetOnScrollView];
         
+        [self setUpCoverViewAndTopBackground];
+        
         self.foregroundColor = DEFAULT_FOREGROUND_COLOR;
         self.backgroundColor = DEFAULT_BACKGROUND_COLOR;
         
         [self setUpPaddles];
         [self setUpBall];
-        
-        [self setUpCoverView];
         
         state = BOZPongRefreshControlStateIdle;
     }
@@ -196,14 +195,16 @@ typedef enum {
     [self addSubview:ballView];
 }
 
-- (void)setUpCoverView
+- (void)setUpCoverViewAndTopBackground
 {
     coverView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
     coverView.backgroundColor = self.scrollView.backgroundColor;
-    
     [self.scrollView addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew context:nil];
-    
     [self addSubview:coverView];
+    
+    topBackgroundView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, coverView.frame.size.height, self.frame.size.width, 0.0f)];
+    topBackgroundView.backgroundColor = self.backgroundColor;
+    [self insertSubview:topBackgroundView atIndex:0];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
@@ -218,6 +219,12 @@ typedef enum {
 }
 
 #pragma mark - Handling various configuration changes
+
+- (void)setBackgroundColor:(UIColor *)backgroundColor
+{
+    [super setBackgroundColor:backgroundColor];
+    topBackgroundView.backgroundColor = backgroundColor;
+}
 
 - (void)setForegroundColor:(UIColor*)foregroundColor
 {
@@ -239,14 +246,15 @@ typedef enum {
 
 - (void)scrollViewDidScroll
 {
+    CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.scrollView.contentOffset.y - originalTopContentInset;
+    
+    [self offsetCoverAndTopBackgroundBy:rawOffset];
+    
     if(state == BOZPongRefreshControlStateIdle) {
-        CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.scrollView.contentOffset.y - originalTopContentInset;
         CGFloat ballAndPaddlesOffset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
         
         [self offsetBallAndPaddlesBy:ballAndPaddlesOffset];
         [self rotatePaddlesAccordingToOffset:ballAndPaddlesOffset];
-        
-        [self offsetCoverBy:rawOffset];
     }
 }
 
@@ -266,9 +274,14 @@ typedef enum {
     rightPaddleView.transform = CGAffineTransformMakeRotation(-angleToRotate);
 }
 
-- (void)offsetCoverBy:(CGFloat)offset
+- (void)offsetCoverAndTopBackgroundBy:(CGFloat)offset
 {
     coverView.center = CGPointMake(self.center.x, self.center.y - offset);
+    
+    CGRect newTopBackgroundFrame = topBackgroundView.frame;
+    newTopBackgroundFrame.origin.y = coverView.frame.origin.y + coverView.frame.size.height;
+    newTopBackgroundFrame.size.height = offset;
+    topBackgroundView.frame = newTopBackgroundFrame;
 }
 
 #pragma mark Letting go of the scroll view, checking for refresh trigger

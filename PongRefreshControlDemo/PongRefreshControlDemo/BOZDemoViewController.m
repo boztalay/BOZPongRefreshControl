@@ -52,13 +52,13 @@
 
 - (void)refreshTriggered
 {
-    UIAlertView *alert = [[UIAlertView alloc]
-                          initWithTitle:@"Whoa!"
-                          message:@"You triggered a refresh! Hit \"Done Loading\" to make it stop."
-                          delegate:nil
-                          cancelButtonTitle:@"Sweet!"
-                          otherButtonTitles:nil];
-    [alert show];
+//    UIAlertView *alert = [[UIAlertView alloc]
+//                          initWithTitle:@"Whoa!"
+//                          message:@"You triggered a refresh! Hit \"Done Loading\" to make it stop."
+//                          delegate:nil
+//                          cancelButtonTitle:@"Sweet!"
+//                          otherButtonTitles:nil];
+//    [alert show];
 }
 
 #pragma mark - Resetting the refresh control when loading is done
