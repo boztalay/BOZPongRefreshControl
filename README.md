@@ -46,7 +46,7 @@ Then, implement ```UIScrollViewDelegate``` in your ```UIViewController``` if you
 }
 ```
 
-Lastly, implement this method to listen for refresh triggers:
+Lastly, make sure you've implemented the ```refreshAction``` you passed it earlier to listen for refresh triggers:
 
 ```objective-c
 - (void)refreshTriggered
