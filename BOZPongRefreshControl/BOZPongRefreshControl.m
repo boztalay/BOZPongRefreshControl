@@ -105,21 +105,32 @@ typedef enum {
                            andRefreshAction:(SEL)refreshAction
 {
     if([self doesTableViewAlreadyHaveAPongRefreshControl:tableView]) {
-        return (BOZPongRefreshControl*)tableView.tableHeaderView;
+        return (BOZPongRefreshControl*)[tableView.tableHeaderView.subviews firstObject];
     }
     
     BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)
                                                                                andScrollView:(UIScrollView*)tableView
                                                                             andRefreshTarget:refreshTarget
                                                                             andRefreshAction:refreshAction];
-    [tableView setTableHeaderView:pongRefreshControl];
+    
+    UIView* headerView = [[UIView alloc] initWithFrame:pongRefreshControl.frame];
+    headerView.clipsToBounds = NO;
+    
+    [headerView addSubview:pongRefreshControl];
+    [tableView setTableHeaderView:headerView];
     
     return pongRefreshControl;
 }
 
 + (BOOL)doesTableViewAlreadyHaveAPongRefreshControl:(UITableView*)tableView
 {
-    return (tableView.tableHeaderView != nil && [tableView.tableHeaderView isKindOfClass:[BOZPongRefreshControl class]]);
+    if(tableView.tableHeaderView != nil) {
+        if(tableView.tableHeaderView.subviews.count == 1) {
+            return [[tableView.tableHeaderView.subviews firstObject] isKindOfClass:[BOZPongRefreshControl class]];
+        }
+    }
+    
+    return NO;
 }
 
 #pragma mark - Initializing a new pong refresh control
@@ -170,14 +181,14 @@ typedef enum {
 
 - (void)setUpCoverViewAndGameView
 {
-    coverView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
-    coverView.backgroundColor = self.scrollView.backgroundColor;
-    [self.scrollView addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew context:nil];
-    [self addSubview:coverView];
-    
     gameView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
     gameView.backgroundColor = [UIColor clearColor];
     [self addSubview:gameView];
+    
+    coverView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
+    coverView.backgroundColor = self.scrollView.backgroundColor;
+    [self.scrollView addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew context:nil];
+    [gameView addSubview:coverView];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
@@ -276,14 +287,18 @@ typedef enum {
 
 - (void)offsetCoverAndGameViewBy:(CGFloat)offset
 {
-    coverView.center = CGPointMake(self.center.x, self.center.y - offset);
-    
     if(offset > REFRESH_CONTROL_HEIGHT) {
-        CGRect newFrame = self.frame;
-        newFrame.size.height = offset;
-        newFrame.origin.y = -originalTopContentInset - (offset - REFRESH_CONTROL_HEIGHT);
+        //This is here so we don't see any snap back on the top when the user releases.
+        //It has to do with the scroll view scrolling and being animated at the same time.
+        //Also, it's totally weird and will be changing soon.
+        CGFloat offsetAndChange = offset + 100.0f;
         
-        NSLog(@"Original Origin: %f; Offset: %f; New Origin: %f", self.frame.origin.y, offset, newFrame.origin.y);
+        CGRect newFrame = self.frame;
+        newFrame.size.height = offsetAndChange;
+        newFrame.origin.y = -(offsetAndChange - REFRESH_CONTROL_HEIGHT);
+        if(![self.scrollView isKindOfClass:[UITableView class]]) {
+            newFrame.origin.y -= originalTopContentInset;
+        }
         
         self.frame = newFrame;
         
@@ -291,6 +306,8 @@ typedef enum {
         newGameViewFrame.origin.y = self.frame.size.height - gameView.frame.size.height;
         gameView.frame = newGameViewFrame;
     }
+    
+    coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, (gameView.frame.size.height / 2.0f) - offset);
 }
 
 #pragma mark Letting go of the scroll view, checking for refresh trigger
@@ -357,7 +374,7 @@ typedef enum {
     newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
     self.scrollView.contentInset = newInsets;
     
-    coverView.center = self.center;
+    coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, gameView.frame.size.height / 2.0f);
 }
 
 - (void)resetPaddlesAndBall
