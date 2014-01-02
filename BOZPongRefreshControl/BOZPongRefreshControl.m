@@ -46,7 +46,7 @@ typedef enum {
     CGFloat rightPaddleDestination;
 
     UIView* coverView;
-    UIView* topBackgroundView;
+    UIView* gameView;
 }
 
 @property (strong, nonatomic) UIScrollView* scrollView;
@@ -105,7 +105,7 @@ typedef enum {
                            andRefreshAction:(SEL)refreshAction
 {
     if([self doesTableViewAlreadyHaveAPongRefreshControl:tableView]) {
-        return (BOZPongRefreshControl*)tableView.tableHeaderView;
+        return (BOZPongRefreshControl*)[tableView.tableHeaderView.subviews firstObject];
     }
     
     BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)
@@ -113,14 +113,24 @@ typedef enum {
                                                                             andRefreshTarget:refreshTarget
                                                                             andRefreshAction:refreshAction];
     
-    [tableView setTableHeaderView:pongRefreshControl];
+    UIView* headerView = [[UIView alloc] initWithFrame:pongRefreshControl.frame];
+    headerView.clipsToBounds = NO;
+    
+    [headerView addSubview:pongRefreshControl];
+    [tableView setTableHeaderView:headerView];
     
     return pongRefreshControl;
 }
 
 + (BOOL)doesTableViewAlreadyHaveAPongRefreshControl:(UITableView*)tableView
 {
-    return (tableView.tableHeaderView != nil && [tableView.tableHeaderView isKindOfClass:[BOZPongRefreshControl class]]);
+    if(tableView.tableHeaderView != nil) {
+        if(tableView.tableHeaderView.subviews.count == 1) {
+            return [[tableView.tableHeaderView.subviews firstObject] isKindOfClass:[BOZPongRefreshControl class]];
+        }
+    }
+    
+    return NO;
 }
 
 #pragma mark - Initializing a new pong refresh control
@@ -141,7 +151,7 @@ typedef enum {
         [self calculateOriginalTopContentInset];
         [self setNewTopContentInsetOnScrollView];
         
-        [self setUpCoverViewAndTopBackground];
+        [self setUpCoverViewAndGameView];
         
         self.foregroundColor = DEFAULT_FOREGROUND_COLOR;
         self.backgroundColor = DEFAULT_BACKGROUND_COLOR;
@@ -169,44 +179,16 @@ typedef enum {
     self.scrollView.contentInset = newContentInset;
 }
 
-- (void)setUpPaddles
+- (void)setUpCoverViewAndGameView
 {
-    leftPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.25f, self.frame.size.height);
-    leftPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
-    leftPaddleView.center = leftPaddleIdleOrigin;
-    leftPaddleView.backgroundColor = self.foregroundColor;
+    gameView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
+    gameView.backgroundColor = [UIColor clearColor];
+    [self addSubview:gameView];
     
-    rightPaddleIdleOrigin = CGPointMake(self.frame.size.width * 0.75f, self.frame.size.height);
-    rightPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
-    rightPaddleView.center = rightPaddleIdleOrigin;
-    rightPaddleView.backgroundColor = self.foregroundColor;
-    
-    [self addSubview:leftPaddleView];
-    [self addSubview:rightPaddleView];
-}
-
-- (void)setUpBall
-{
-    ballIdleOrigin = CGPointMake(self.frame.size.width * 0.50f, 0.0f);
-    ballView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 3.0f, 3.0f)];
-    ballView.center = ballIdleOrigin;
-    ballView.backgroundColor = self.foregroundColor;
-    
-    self.totalHorizontalTravelTimeForBall = DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL;
-    
-    [self addSubview:ballView];
-}
-
-- (void)setUpCoverViewAndTopBackground
-{
     coverView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
     coverView.backgroundColor = self.scrollView.backgroundColor;
     [self.scrollView addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew context:nil];
-    [self addSubview:coverView];
-    
-    topBackgroundView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, coverView.frame.size.height, self.frame.size.width, 0.0f)];
-    topBackgroundView.backgroundColor = self.backgroundColor;
-    [self insertSubview:topBackgroundView atIndex:0];
+    [gameView addSubview:coverView];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
@@ -220,12 +202,39 @@ typedef enum {
     }
 }
 
+- (void)setUpPaddles
+{
+    leftPaddleIdleOrigin = CGPointMake(gameView.frame.size.width * 0.25f, gameView.frame.size.height);
+    leftPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
+    leftPaddleView.center = leftPaddleIdleOrigin;
+    leftPaddleView.backgroundColor = self.foregroundColor;
+    
+    rightPaddleIdleOrigin = CGPointMake(gameView.frame.size.width * 0.75f, gameView.frame.size.height);
+    rightPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
+    rightPaddleView.center = rightPaddleIdleOrigin;
+    rightPaddleView.backgroundColor = self.foregroundColor;
+    
+    [gameView addSubview:leftPaddleView];
+    [gameView addSubview:rightPaddleView];
+}
+
+- (void)setUpBall
+{
+    ballIdleOrigin = CGPointMake(gameView.frame.size.width * 0.50f, 0.0f);
+    ballView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 3.0f, 3.0f)];
+    ballView.center = ballIdleOrigin;
+    ballView.backgroundColor = self.foregroundColor;
+    
+    self.totalHorizontalTravelTimeForBall = DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL;
+    
+    [gameView addSubview:ballView];
+}
+
 #pragma mark - Handling various configuration changes
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor
 {
     [super setBackgroundColor:backgroundColor];
-    topBackgroundView.backgroundColor = backgroundColor;
 }
 
 - (void)setForegroundColor:(UIColor*)foregroundColor
@@ -250,7 +259,7 @@ typedef enum {
 {
     CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.scrollView.contentOffset.y - originalTopContentInset;
     
-    [self offsetCoverAndTopBackgroundBy:rawOffset];
+    [self offsetCoverAndGameViewBy:rawOffset];
     
     if(state == BOZPongRefreshControlStateIdle) {
         CGFloat ballAndPaddlesOffset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
@@ -276,14 +285,29 @@ typedef enum {
     rightPaddleView.transform = CGAffineTransformMakeRotation(-angleToRotate);
 }
 
-- (void)offsetCoverAndTopBackgroundBy:(CGFloat)offset
+- (void)offsetCoverAndGameViewBy:(CGFloat)offset
 {
-    coverView.center = CGPointMake(self.center.x, self.center.y - offset);
+    if(offset > REFRESH_CONTROL_HEIGHT) {
+        //This is here so we don't see any snap back on the top when the user releases.
+        //It has to do with the scroll view scrolling and being animated at the same time.
+        //Also, it's totally weird and will be changing soon.
+        CGFloat offsetAndChange = offset + 100.0f;
+        
+        CGRect newFrame = self.frame;
+        newFrame.size.height = offsetAndChange;
+        newFrame.origin.y = -(offsetAndChange - REFRESH_CONTROL_HEIGHT);
+        if(![self.scrollView isKindOfClass:[UITableView class]]) {
+            newFrame.origin.y -= originalTopContentInset;
+        }
+        
+        self.frame = newFrame;
+        
+        CGRect newGameViewFrame = gameView.frame;
+        newGameViewFrame.origin.y = self.frame.size.height - gameView.frame.size.height;
+        gameView.frame = newGameViewFrame;
+    }
     
-    CGRect newTopBackgroundFrame = topBackgroundView.frame;
-    newTopBackgroundFrame.origin.y = coverView.frame.origin.y + coverView.frame.size.height;
-    newTopBackgroundFrame.size.height = offset;
-    topBackgroundView.frame = newTopBackgroundFrame;
+    coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, (gameView.frame.size.height / 2.0f) - offset);
 }
 
 #pragma mark Letting go of the scroll view, checking for refresh trigger
@@ -350,7 +374,7 @@ typedef enum {
     newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
     self.scrollView.contentInset = newInsets;
     
-    coverView.center = self.center;
+    coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, gameView.frame.size.height / 2.0f);
 }
 
 - (void)resetPaddlesAndBall
@@ -382,7 +406,7 @@ typedef enum {
     if(arc4random() % 2 == 1) {
         destinationX = [self rightPaddleContactX];
     }
-    CGFloat destinationY = (float)(arc4random() % (int)self.frame.size.height);
+    CGFloat destinationY = (float)(arc4random() % (int)gameView.frame.size.height);
     
     ballDestination = CGPointMake(destinationX, destinationY);
     ballDirection = CGPointMake((ballDestination.x - ballOrigin.x), (ballDestination.y - ballOrigin.y));
@@ -576,7 +600,7 @@ typedef enum {
 
 - (CGFloat)floorContactY
 {
-    return self.frame.size.height - (ballView.frame.size.height / 2.0f);
+    return gameView.frame.size.height - (ballView.frame.size.height / 2.0f);
 }
 
 #pragma mark Paddle collisions
@@ -588,7 +612,7 @@ typedef enum {
 
 - (CGFloat)floorLeftPaddleContactY
 {
-    return self.frame.size.height - (leftPaddleView.frame.size.height / 2.0f);
+    return gameView.frame.size.height - (leftPaddleView.frame.size.height / 2.0f);
 }
 
 - (CGFloat)ceilingRightPaddleContactY
@@ -598,7 +622,7 @@ typedef enum {
 
 - (CGFloat)floorRightPaddleContactY
 {
-    return self.frame.size.height - (rightPaddleView.frame.size.height / 2.0f);
+    return gameView.frame.size.height - (rightPaddleView.frame.size.height / 2.0f);
 }
 
 #pragma mark - Etc, some basic math functions
