@@ -318,8 +318,7 @@ typedef enum {
         if([self didUserScrollFarEnoughToTriggerRefresh]) {
             state = BOZPongRefreshControlStateRefreshing;
         
-            [self animateScrollViewBackIntoPlaceWithRefreshControlShowing];
-            [self startPong];
+            [self beginLoading];
             [self notifyTargetOfRefreshTrigger];
         }
     }
@@ -348,6 +347,12 @@ typedef enum {
 }
 
 #pragma mark - Resetting after loading finished
+
+- (void)beginLoading
+{
+    [self animateScrollViewBackIntoPlaceWithRefreshControlShowing];
+    [self startPong];
+}
 
 - (void)finishedLoading
 {
