@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
 
   s.platform     = :ios
 
-  s.source       = { :git => "https://github.com/jcon5294/BOZPongRefreshControl.git", :tag => “0.1.1” }
+  s.source       = { :git => "https://github.com/boztalay/BOZPongRefreshControl.git", :tag => “0.1.1” }
 
   s.source_files  = 'BOZPongRefreshControl/**/*.{h,m}'
   s.public_header_files = 'BOZPongRefreshControl/**/*.h'
