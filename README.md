@@ -5,10 +5,17 @@ A pull-down-to-refresh control for iOS that plays pong
 
 <p align="center"><img src="http://i.imgur.com/cdh7eVE.gif"/></p>
 
-Using It
+Installation
+------------
+
+It's on CocoaPods! Put ```pod 'BOZPongRefreshControl'``` in your Podfile.
+
+Alternatively, just place ```BOZPongRefreshControl.h``` and ```BOZPongRefreshControl.m``` in your project anywhere you'd like.
+
+Usage
 --------
 
-Place ```BOZPongRefreshControl.h``` and ```BOZPongRefreshControl.m``` in your project anywhere you'd like. Then, you can attach it to a ```UITableView``` or ```UIScrollView``` like so:
+Attach it to a ```UITableView``` or ```UIScrollView``` like so:
 
 ```objective-c
 - (void)viewDidLoad
