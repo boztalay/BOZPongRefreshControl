@@ -65,7 +65,7 @@ Lastly, make sure you've implemented the ```refreshAction``` you passed it earli
 }
 ```
 
-For more details, check out the demo app's code. It has examples for using the refresh control on a UIScrollView and outside of a UITableViewController.
+For more details, check out the demo app's code. It has examples for using the refresh control on a ```UIScrollView``` and outside of a ```UITableViewController```.
 
 Configuration
 -------------
@@ -78,5 +78,5 @@ Configuration
 Known Issues/To Do
 ------------------
 
-- It'll interfere with UIScrollView content that's above y = 0.0f
+- It'll interfere with ```UIScrollView``` content that's above y = 0.0f
 - The behavior of the paddles needs a little work
