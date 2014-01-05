@@ -13,8 +13,8 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/jcon5294/BOZPongRefreshControl.git", :tag => "0.0.1" }
 
-  s.source_files  = 'BOZPongRefreshControl/**/*.{h,m}'
-  s.public_header_files = 'BOZPongRefreshControl/**/*.h'
+  s.source_files  = 'BOZPongRefreshControl/*.{h,m}'
+  s.public_header_files = 'BOZPongRefreshControl/*.h'
 
   s.framework  = 'UIKit'
   s.requires_arc = true

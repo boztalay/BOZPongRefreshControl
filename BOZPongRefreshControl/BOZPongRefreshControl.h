@@ -22,27 +22,12 @@
  *  content frame (negative y value in the origin), so if you
  *  have content up there, it'll be covered up.
  *
- *  If you pass a UITableView in as the scrollView, it'll use
- *  attachToTableView instead.
- *
  *  The pong refresh control will perform the refreshAction on
  *  on the refreshTarget when the user triggers a refresh.
  */
 + (BOZPongRefreshControl*)attachToScrollView:(UIScrollView*)scrollView
                            withRefreshTarget:(id)refreshTarget
                             andRefreshAction:(SEL)refreshAction;
-
-/**
- *  Call this function to attach a pong refresh control to
- *  a UITableView. This will replace any existing header
- *  view you already have on the table view.
- *
- *  The pong refresh control will perform the refreshAction on
- *  on the refreshTarget when the user triggers a refresh.
- */
-+ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView
-                          withRefreshTarget:(id)refreshTarget
-                           andRefreshAction:(SEL)refreshAction;
 
 #pragma mark - Functions required to use a pong refresh control
 

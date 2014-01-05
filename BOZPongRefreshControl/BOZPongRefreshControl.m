@@ -28,8 +28,6 @@ typedef enum {
 @interface BOZPongRefreshControl() {
     BOZPongRefreshControlState state;
     
-    CGFloat originalTopContentInset;
-    
     UIView* leftPaddleView;
     UIView* rightPaddleView;
     UIView* ballView;
@@ -52,6 +50,7 @@ typedef enum {
 @property (strong, nonatomic) UIScrollView* scrollView;
 @property (strong, nonatomic) id refreshTarget;
 @property (nonatomic) SEL refreshAction;
+@property (nonatomic, readonly) CGFloat distanceScrolled;
 
 @end
 
@@ -65,13 +64,6 @@ typedef enum {
                            withRefreshTarget:(id)refreshTarget
                             andRefreshAction:(SEL)refreshAction
 {
-    BOOL isScrollViewATableView = [scrollView isKindOfClass:[UITableView class]];
-    if(isScrollViewATableView) {
-        return [self attachToTableView:(UITableView*)scrollView
-                     withRefreshTarget:refreshTarget
-                      andRefreshAction:refreshAction];
-    }
-    
     BOZPongRefreshControl* existingPongRefreshControl = [self findPongRefreshControlInScrollView:scrollView];
     if(existingPongRefreshControl != nil) {
         return existingPongRefreshControl;
@@ -98,41 +90,6 @@ typedef enum {
     return nil;
 }
 
-#pragma mark UITableView
-
-+ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView
-                          withRefreshTarget:(id)refreshTarget
-                           andRefreshAction:(SEL)refreshAction
-{
-    if([self doesTableViewAlreadyHaveAPongRefreshControl:tableView]) {
-        return (BOZPongRefreshControl*)[tableView.tableHeaderView.subviews firstObject];
-    }
-    
-    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, tableView.frame.size.width, REFRESH_CONTROL_HEIGHT)
-                                                                               andScrollView:(UIScrollView*)tableView
-                                                                            andRefreshTarget:refreshTarget
-                                                                            andRefreshAction:refreshAction];
-    
-    UIView* headerView = [[UIView alloc] initWithFrame:pongRefreshControl.frame];
-    headerView.clipsToBounds = NO;
-    
-    [headerView addSubview:pongRefreshControl];
-    [tableView setTableHeaderView:headerView];
-    
-    return pongRefreshControl;
-}
-
-+ (BOOL)doesTableViewAlreadyHaveAPongRefreshControl:(UITableView*)tableView
-{
-    if(tableView.tableHeaderView != nil) {
-        if(tableView.tableHeaderView.subviews.count == 1) {
-            return [[tableView.tableHeaderView.subviews firstObject] isKindOfClass:[BOZPongRefreshControl class]];
-        }
-    }
-    
-    return NO;
-}
-
 #pragma mark - Initializing a new pong refresh control
 
 - (id)initWithFrame:(CGRect)frame
@@ -148,9 +105,6 @@ typedef enum {
         self.refreshTarget = refreshTarget;
         self.refreshAction = refreshAction;
         
-        [self calculateOriginalTopContentInset];
-        [self setNewTopContentInsetOnScrollView];
-        
         [self setUpCoverViewAndGameView];
         
         self.foregroundColor = DEFAULT_FOREGROUND_COLOR;
@@ -162,21 +116,6 @@ typedef enum {
         state = BOZPongRefreshControlStateIdle;
     }
     return self;
-}
-
-- (void)calculateOriginalTopContentInset
-{
-    originalTopContentInset = self.scrollView.contentInset.top;
-    if(![self.scrollView isKindOfClass:[UITableView class]]) {
-        originalTopContentInset += REFRESH_CONTROL_HEIGHT;
-    }
-}
-
-- (void)setNewTopContentInsetOnScrollView
-{
-    UIEdgeInsets newContentInset = self.scrollView.contentInset;
-    newContentInset.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
-    self.scrollView.contentInset = newContentInset;
 }
 
 - (void)setUpCoverViewAndGameView
@@ -257,16 +196,21 @@ typedef enum {
 
 - (void)scrollViewDidScroll
 {
-    CGFloat rawOffset = REFRESH_CONTROL_HEIGHT - self.scrollView.contentOffset.y - originalTopContentInset;
-    
-    [self offsetCoverAndGameViewBy:rawOffset];
+    CGFloat rawOffset = -self.distanceScrolled;
     
     if(state == BOZPongRefreshControlStateIdle) {
         CGFloat ballAndPaddlesOffset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
         
         [self offsetBallAndPaddlesBy:ballAndPaddlesOffset];
         [self rotatePaddlesAccordingToOffset:ballAndPaddlesOffset];
+    } else if (state == BOZPongRefreshControlStateRefreshing) {
+        [self scrollRefreshControlToVisible];
     }
+}
+
+- (CGFloat)distanceScrolled
+{
+    return self.scrollView.contentOffset.y + self.scrollView.contentInset.top;
 }
 
 - (void)offsetBallAndPaddlesBy:(CGFloat)offset
@@ -285,31 +229,6 @@ typedef enum {
     rightPaddleView.transform = CGAffineTransformMakeRotation(-angleToRotate);
 }
 
-- (void)offsetCoverAndGameViewBy:(CGFloat)offset
-{
-    if(offset > REFRESH_CONTROL_HEIGHT) {
-        //This is here so we don't see any snap back on the top when the user releases.
-        //It has to do with the scroll view scrolling and being animated at the same time.
-        //Also, it's totally weird and will be changing soon.
-        CGFloat offsetAndChange = offset + 100.0f;
-        
-        CGRect newFrame = self.frame;
-        newFrame.size.height = offsetAndChange;
-        newFrame.origin.y = -(offsetAndChange - REFRESH_CONTROL_HEIGHT);
-        if(![self.scrollView isKindOfClass:[UITableView class]]) {
-            newFrame.origin.y -= originalTopContentInset;
-        }
-        
-        self.frame = newFrame;
-        
-        CGRect newGameViewFrame = gameView.frame;
-        newGameViewFrame.origin.y = self.frame.size.height - gameView.frame.size.height;
-        gameView.frame = newGameViewFrame;
-    }
-    
-    coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, (gameView.frame.size.height / 2.0f) - offset);
-}
-
 #pragma mark Letting go of the scroll view, checking for refresh trigger
 
 - (void)scrollViewDidEndDragging
@@ -326,23 +245,17 @@ typedef enum {
 
 - (BOOL)didUserScrollFarEnoughToTriggerRefresh
 {
-    return (self.scrollView.contentOffset.y < -originalTopContentInset);
-}
-
-- (void)animateScrollViewBackIntoPlaceWithRefreshControlShowing
-{
-    [UIView animateWithDuration:0.2f animations:^(void) {
-        UIEdgeInsets newInsets = self.scrollView.contentInset;
-        newInsets.top = originalTopContentInset;
-        self.scrollView.contentInset = newInsets;
-    }];
+    return -self.distanceScrolled > REFRESH_CONTROL_HEIGHT;
 }
 
 - (void)notifyTargetOfRefreshTrigger
 {
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    
+    if ([self.refreshTarget respondsToSelector:self.refreshAction])
         [self.refreshTarget performSelector:self.refreshAction];
+    
     #pragma clang diagnostic pop
 }
 
@@ -350,8 +263,19 @@ typedef enum {
 
 - (void)beginLoading
 {
-    [self animateScrollViewBackIntoPlaceWithRefreshControlShowing];
+    [self scrollRefreshControlToVisible];
     [self startPong];
+}
+
+- (void)scrollRefreshControlToVisible
+{
+    //Animation duration is proportional to distance, to acheive a constant
+    //speed if this function is called multiple times:
+    NSTimeInterval dur = 50.0/(-self.distanceScrolled - REFRESH_CONTROL_HEIGHT);
+    
+    [UIView animateWithDuration:dur animations:^{
+        [self.scrollView setContentOffset:CGPointMake(self.scrollView.contentOffset.x, -self.scrollView.contentInset.top-REFRESH_CONTROL_HEIGHT)];
+    }];
 }
 
 - (void)finishedLoading
@@ -364,7 +288,7 @@ typedef enum {
     
     [UIView animateWithDuration:0.2f animations:^(void)
      {
-         [self resetCoverViewAndScrollViewContentInsets];
+         [self resetCoverViewAndScrollViewContentOffset];
      }
      completion:^(BOOL finished)
      {
@@ -373,11 +297,9 @@ typedef enum {
      }];
 }
 
-- (void)resetCoverViewAndScrollViewContentInsets
+- (void)resetCoverViewAndScrollViewContentOffset
 {
-    UIEdgeInsets newInsets = self.scrollView.contentInset;
-    newInsets.top = originalTopContentInset - REFRESH_CONTROL_HEIGHT;
-    self.scrollView.contentInset = newInsets;
+    [self.scrollView setContentOffset:CGPointMake(0, -self.scrollView.contentInset.top) animated:YES];
     
     coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, gameView.frame.size.height / 2.0f);
 }
