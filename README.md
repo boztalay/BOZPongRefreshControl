@@ -78,7 +78,7 @@ Configuration
 Known Issues/To Do
 ------------------
 
-- It'll interfere with ```UIScrollView``` content that's above y = 0.0f
+- It'll interfere with ```UIScrollView``` content that's above ```y = 0.0f```
 - The behavior of the paddles needs a little work
 - It overwrites header views on ```UITableViews```
 - It doesn't handle orientation changes very well
