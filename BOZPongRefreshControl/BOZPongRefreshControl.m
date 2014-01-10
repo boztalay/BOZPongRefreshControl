@@ -14,7 +14,7 @@
 #define REFRESH_CONTROL_HEIGHT 65.0f
 #define HALF_REFRESH_CONTROL_HEIGHT (REFRESH_CONTROL_HEIGHT / 2.0f)
 
-#define DEFAULT_FOREGROUND_COLOR [UIColor blackColor]
+#define DEFAULT_FOREGROUND_COLOR [UIColor whiteColor]
 #define DEFAULT_BACKGROUND_COLOR [UIColor colorWithWhite:0.10f alpha:1.0f]
 
 #define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 1.0f
@@ -212,17 +212,26 @@ typedef enum {
 {
     CGFloat rawOffset = -self.distanceScrolled;
     
-    if(state == BOZPongRefreshControlStateIdle) {
-        CGFloat ballAndPaddlesOffset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
-        
-        [self offsetBallAndPaddlesBy:ballAndPaddlesOffset];
-        [self rotatePaddlesAccordingToOffset:ballAndPaddlesOffset];
+    if(state != BOZPongRefreshControlStateRefreshing) {
+        [self offsetCoverViewBy:rawOffset];
+
+        if (state == BOZPongRefreshControlStateIdle) {
+            CGFloat ballAndPaddlesOffset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
+            
+            [self offsetBallAndPaddlesBy:ballAndPaddlesOffset];
+            [self rotatePaddlesAccordingToOffset:ballAndPaddlesOffset];
+        }
     }
 }
 
 - (CGFloat)distanceScrolled
 {
     return self.scrollView.contentOffset.y + self.scrollView.contentInset.top;
+}
+
+- (void)offsetCoverViewBy:(CGFloat)offset
+{
+    coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, (gameView.frame.size.height / 2.0f) - offset);
 }
 
 - (void)offsetBallAndPaddlesBy:(CGFloat)offset
