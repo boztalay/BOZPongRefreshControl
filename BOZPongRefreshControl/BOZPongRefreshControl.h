@@ -16,6 +16,14 @@
 #pragma mark - Attaching a pong refresh control
 
 /**
+ *  This function simply calls attachToScrollView. Kept for
+ *  compatibility with earlier versions.
+ */
++ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView
+                          withRefreshTarget:(id)refreshTarget
+                           andRefreshAction:(SEL)refreshAction;
+
+/**
  *  Call this function to attach a pong refresh control to
  *  a UIScrollView. Keep in mind that it does this by adding
  *  the pong refresh control as a subview above the normal
@@ -32,11 +40,19 @@
 #pragma mark - Functions required to use a pong refresh control
 
 /**
+ * Calls [self beginLoadingAnimated:YES]. Kept for 
+ * backwards-compatibility.
+ */
+- (void)beginLoading;
+
+/**
  * Call this function to programatically scroll the refresh
  * control into view, and begin the animation. Does not notify
  * target of trigger.
+ * @param animated Dictates whether the action of scrolling to 
+ * the refresh control is animated (YES) or instant (NO).
  */
-- (void)beginLoading;
+- (void)beginLoadingAnimated:(BOOL)animated;
 
 /**
  *  Call this function when whatever loading task you're doing

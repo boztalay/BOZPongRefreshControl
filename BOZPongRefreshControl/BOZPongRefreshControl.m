@@ -14,7 +14,7 @@
 #define REFRESH_CONTROL_HEIGHT 65.0f
 #define HALF_REFRESH_CONTROL_HEIGHT (REFRESH_CONTROL_HEIGHT / 2.0f)
 
-#define DEFAULT_FOREGROUND_COLOR [UIColor whiteColor]
+#define DEFAULT_FOREGROUND_COLOR [UIColor blackColor]
 #define DEFAULT_BACKGROUND_COLOR [UIColor colorWithWhite:0.10f alpha:1.0f]
 
 #define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 1.0f
@@ -27,6 +27,8 @@ typedef enum {
 
 @interface BOZPongRefreshControl() {
     BOZPongRefreshControlState state;
+    
+    CGFloat originalTopContentInset;
     
     UIView* leftPaddleView;
     UIView* rightPaddleView;
@@ -57,6 +59,17 @@ typedef enum {
 @implementation BOZPongRefreshControl
 
 #pragma mark - Attaching a pong refresh control to a UIScrollView or UITableView
+
+#pragma mark UITableView
+
++ (BOZPongRefreshControl*)attachToTableView:(UITableView*)tableView
+                          withRefreshTarget:(id)refreshTarget
+                           andRefreshAction:(SEL)refreshAction
+{
+    return [self attachToScrollView:tableView
+                  withRefreshTarget:refreshTarget
+                   andRefreshAction:refreshAction];
+}
 
 #pragma mark UIScrollView
 
@@ -105,6 +118,7 @@ typedef enum {
         self.refreshTarget = refreshTarget;
         self.refreshAction = refreshAction;
         
+        originalTopContentInset = scrollView.contentInset.top;
         [self setUpCoverViewAndGameView];
         
         self.foregroundColor = DEFAULT_FOREGROUND_COLOR;
@@ -203,8 +217,6 @@ typedef enum {
         
         [self offsetBallAndPaddlesBy:ballAndPaddlesOffset];
         [self rotatePaddlesAccordingToOffset:ballAndPaddlesOffset];
-    } else if (state == BOZPongRefreshControlStateRefreshing) {
-        [self scrollRefreshControlToVisible];
     }
 }
 
@@ -235,8 +247,7 @@ typedef enum {
 {
     if(state == BOZPongRefreshControlStateIdle) {
         if([self didUserScrollFarEnoughToTriggerRefresh]) {
-            state = BOZPongRefreshControlStateRefreshing;
-        
+            
             [self beginLoading];
             [self notifyTargetOfRefreshTrigger];
         }
@@ -263,18 +274,25 @@ typedef enum {
 
 - (void)beginLoading
 {
-    [self scrollRefreshControlToVisible];
-    [self startPong];
+    [self beginLoadingAnimated:YES];
 }
 
-- (void)scrollRefreshControlToVisible
+- (void)beginLoadingAnimated:(BOOL)animated
 {
-    //Animation duration is proportional to distance, to acheive a constant
-    //speed if this function is called multiple times:
-    NSTimeInterval dur = 50.0/(-self.distanceScrolled - REFRESH_CONTROL_HEIGHT);
-    
-    [UIView animateWithDuration:dur animations:^{
-        [self.scrollView setContentOffset:CGPointMake(self.scrollView.contentOffset.x, -self.scrollView.contentInset.top-REFRESH_CONTROL_HEIGHT)];
+    if (state != BOZPongRefreshControlStateRefreshing) {
+        state = BOZPongRefreshControlStateRefreshing;
+
+        [self scrollRefreshControlToVisibleAnimated:animated];
+        [self startPong];
+    }
+}
+
+- (void)scrollRefreshControlToVisibleAnimated:(BOOL)animated
+{
+    [UIView animateWithDuration:0.2f*animated animations:^(void) {
+        UIEdgeInsets newInsets = self.scrollView.contentInset;
+        newInsets.top = originalTopContentInset + REFRESH_CONTROL_HEIGHT;
+        self.scrollView.contentInset = newInsets;
     }];
 }
 
@@ -288,7 +306,7 @@ typedef enum {
     
     [UIView animateWithDuration:0.2f animations:^(void)
      {
-         [self resetCoverViewAndScrollViewContentOffset];
+         [self resetCoverViewAndScrollViewContentInsets];
      }
      completion:^(BOOL finished)
      {
@@ -297,9 +315,11 @@ typedef enum {
      }];
 }
 
-- (void)resetCoverViewAndScrollViewContentOffset
+- (void)resetCoverViewAndScrollViewContentInsets
 {
-    [self.scrollView setContentOffset:CGPointMake(0, -self.scrollView.contentInset.top) animated:YES];
+    UIEdgeInsets newInsets = self.scrollView.contentInset;
+    newInsets.top = originalTopContentInset;
+    self.scrollView.contentInset = newInsets;
     
     coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, gameView.frame.size.height / 2.0f);
 }
