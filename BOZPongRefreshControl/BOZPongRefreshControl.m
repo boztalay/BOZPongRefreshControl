@@ -17,7 +17,7 @@
 #define DEFAULT_FOREGROUND_COLOR [UIColor whiteColor]
 #define DEFAULT_BACKGROUND_COLOR [UIColor colorWithWhite:0.10f alpha:1.0f]
 
-#define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 1.0f
+#define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 0.75f
 
 typedef enum {
     BOZPongRefreshControlStateIdle = 0,
