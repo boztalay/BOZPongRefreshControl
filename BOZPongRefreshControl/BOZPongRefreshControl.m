@@ -19,6 +19,8 @@
 
 #define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 0.75f
 
+#define ROTATION_ANIMATION_DELAY 0.2f
+
 typedef enum {
     BOZPongRefreshControlStateIdle = 0,
     BOZPongRefreshControlStateRefreshing = 1,
@@ -42,11 +44,15 @@ typedef enum {
     CGPoint ballDestination;
     CGPoint ballDirection;
     
+    CGFloat leftPaddleOrigin;
+    CGFloat rightPaddleOrigin;
     CGFloat leftPaddleDestination;
     CGFloat rightPaddleDestination;
 
     UIView* coverView;
     UIView* gameView;
+    
+    NSDate* time;
 }
 
 @property (strong, nonatomic) UIScrollView* scrollView;
@@ -128,6 +134,10 @@ typedef enum {
         [self setUpBall];
         
         state = BOZPongRefreshControlStateIdle;
+        
+        [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(handleRotation) name: UIDeviceOrientationDidChangeNotification object: nil];
+        
     }
     return self;
 }
@@ -359,9 +369,7 @@ typedef enum {
 
 - (void)resetPaddlesAndBall
 {
-    [leftPaddleView.layer removeAllAnimations];
-    [rightPaddleView.layer removeAllAnimations];
-    [ballView.layer removeAllAnimations];
+    [self removeAnimations];
     
     leftPaddleView.center = leftPaddleIdleOrigin;
     rightPaddleView.center = rightPaddleIdleOrigin;
@@ -375,6 +383,9 @@ typedef enum {
 - (void)startPong
 {
     ballOrigin = ballView.center;
+    leftPaddleOrigin = leftPaddleIdleOrigin.y;
+    rightPaddleOrigin = rightPaddleIdleOrigin.y;
+    
     [self pickRandomStartingBallDestination];
     [self determineNextPaddleDestinations];
     [self animateBallAndPaddlesToDestinations];
@@ -503,7 +514,8 @@ typedef enum {
             rightPaddleOffset = (rightPaddleVerticalDistanceToBallDestination * normalSpeedFactor);
         }
     }
-    
+    leftPaddleOrigin = leftPaddleDestination;
+    rightPaddleOrigin = rightPaddleDestination;
     leftPaddleDestination = leftPaddleView.center.y + leftPaddleOffset;
     rightPaddleDestination = rightPaddleView.center.y + rightPaddleOffset;
 
@@ -539,9 +551,8 @@ typedef enum {
 
 - (void)animateBallAndPaddlesToDestinations
 {
-    CGFloat endToEndDistance = [self rightPaddleContactX] - [self leftPaddleContactX];
-    CGFloat proportionOfHorizontalDistanceLeftForBallToTravel = fabsf((ballDestination.x - ballView.center.x) / endToEndDistance);
-    CGFloat animationDuration = self.totalHorizontalTravelTimeForBall * proportionOfHorizontalDistanceLeftForBallToTravel;
+    time = [NSDate date];
+    CGFloat animationDuration = [self getAnimationDuration];
     
     [UIView animateWithDuration:animationDuration delay:0.0f options:UIViewAnimationOptionCurveLinear animations:^(void)
      {
@@ -555,10 +566,24 @@ typedef enum {
              [self determineNextBallDestination];
              [self determineNextPaddleDestinations];
              [self animateBallAndPaddlesToDestinations];
+             
          }
      }];
 }
 
+- (CGFloat) getAnimationDuration
+{
+    CGFloat endToEndDistance = [self rightPaddleContactX] - [self leftPaddleContactX];
+    CGFloat proportionOfHorizontalDistanceLeftForBallToTravel = fabsf((ballDestination.x - ballOrigin.x) / endToEndDistance);
+    return  self.totalHorizontalTravelTimeForBall * proportionOfHorizontalDistanceLeftForBallToTravel;
+}
+
+- (void) removeAnimations
+{
+    [leftPaddleView.layer removeAllAnimations];
+    [rightPaddleView.layer removeAllAnimations];
+    [ballView.layer removeAllAnimations];
+}
 #pragma mark Helper functions for collision detection
 
 #pragma mark Ball collisions
@@ -619,5 +644,46 @@ typedef enum {
     
     return (fabsf(float1 - float2) < ellipsis);
 }
+
+#pragma mark - Rotation 
+
+- (void) handleRotation {
+   
+    //adjust frames
+    self.frame = CGRectMake(0.0f, -REFRESH_CONTROL_HEIGHT, self.scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT);
+    gameView.center = CGPointMake(self.scrollView.center.x, gameView.center.y);
+    coverView.frame = CGRectMake(coverView.frame.origin.x, coverView.frame.origin.y, gameView.frame.size.width, gameView.frame.size.height);
+    
+    if (state == BOZPongRefreshControlStateRefreshing)
+    {
+        [self removeAnimations];
+        [self adjustObjectPositions];  //set positions of ball and paddles
+        
+        //animate; slight delay makes transition a little smoother
+        [self performSelector:@selector(animateBallAndPaddlesToDestinations) withObject:Nil afterDelay:ROTATION_ANIMATION_DELAY];
+    }
+    
+}
+
+- (void) adjustObjectPositions
+{
+    float timeInterval = -[time timeIntervalSinceNow]; //how long animation progressed
+    //displacements
+    CGPoint ballDisp = CGPointMake(ballDestination.x - ballOrigin.x, ballDestination.y - ballOrigin.y);
+    CGFloat leftPaddleDisp = leftPaddleDestination - leftPaddleOrigin;
+    CGFloat rightPaddleDisp = rightPaddleDestination - rightPaddleOrigin;
+    
+    float timeProp = timeInterval/[self getAnimationDuration];
+    
+    ballView.center       = CGPointMake(ballOrigin.x + ballDisp.x * timeProp ,ballOrigin.y + ballDisp.y * timeProp);
+    leftPaddleView.center = CGPointMake(leftPaddleView.center.x, leftPaddleOrigin + leftPaddleDisp * timeProp);
+    rightPaddleView.center = CGPointMake(rightPaddleView.center.x, rightPaddleOrigin + rightPaddleDisp * timeProp);
+    
+    ballOrigin = ballView.center;
+    leftPaddleOrigin = leftPaddleView.center.y;
+    rightPaddleOrigin = rightPaddleView.center.y;
+    
+}
+
 
 @end
