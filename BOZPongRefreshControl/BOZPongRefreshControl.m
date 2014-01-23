@@ -52,7 +52,8 @@ typedef enum {
     UIView* coverView;
     UIView* gameView;
     
-    NSDate* time;
+    NSDate* currentAnimationStartTime;
+    CGFloat currentAnimationDuration;
 }
 
 @property (strong, nonatomic) UIScrollView* scrollView;
@@ -136,7 +137,10 @@ typedef enum {
         state = BOZPongRefreshControlStateIdle;
         
         [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
-        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(handleRotation) name: UIDeviceOrientationDidChangeNotification object: nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleRotation)
+                                                     name:UIDeviceOrientationDidChangeNotification
+                                                   object:nil];
         
     }
     return self;
@@ -551,10 +555,10 @@ typedef enum {
 
 - (void)animateBallAndPaddlesToDestinations
 {
-    time = [NSDate date];
-    CGFloat animationDuration = [self getAnimationDuration];
+    currentAnimationStartTime = [NSDate date];
+    currentAnimationDuration = [self calculateAnimationDuration];
     
-    [UIView animateWithDuration:animationDuration delay:0.0f options:UIViewAnimationOptionCurveLinear animations:^(void)
+    [UIView animateWithDuration:currentAnimationDuration delay:0.0f options:UIViewAnimationOptionCurveLinear animations:^(void)
      {
          ballView.center = ballDestination;
          leftPaddleView.center = CGPointMake(leftPaddleView.center.x, leftPaddleDestination);
@@ -566,19 +570,18 @@ typedef enum {
              [self determineNextBallDestination];
              [self determineNextPaddleDestinations];
              [self animateBallAndPaddlesToDestinations];
-             
          }
      }];
 }
 
-- (CGFloat) getAnimationDuration
+- (CGFloat)calculateAnimationDuration
 {
     CGFloat endToEndDistance = [self rightPaddleContactX] - [self leftPaddleContactX];
     CGFloat proportionOfHorizontalDistanceLeftForBallToTravel = fabsf((ballDestination.x - ballOrigin.x) / endToEndDistance);
-    return  self.totalHorizontalTravelTimeForBall * proportionOfHorizontalDistanceLeftForBallToTravel;
+    return (self.totalHorizontalTravelTimeForBall * proportionOfHorizontalDistanceLeftForBallToTravel);
 }
 
-- (void) removeAnimations
+- (void)removeAnimations
 {
     [leftPaddleView.layer removeAllAnimations];
     [rightPaddleView.layer removeAllAnimations];
@@ -630,6 +633,46 @@ typedef enum {
     return gameView.frame.size.height - (rightPaddleView.frame.size.height / 2.0f);
 }
 
+#pragma mark - Handling orientation changes
+
+- (void)handleRotation {
+    self.frame = CGRectMake(0.0f, -REFRESH_CONTROL_HEIGHT, self.scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT);
+    gameView.center = CGPointMake(self.scrollView.center.x, gameView.center.y);
+    coverView.frame = CGRectMake(coverView.frame.origin.x, coverView.frame.origin.y, gameView.frame.size.width, gameView.frame.size.height);
+    
+    if (state == BOZPongRefreshControlStateRefreshing) {
+        [self removeAnimations];
+        [self adjustObjectPositions];
+        
+        //Slight delay makes the transition smoother
+        [self performSelector:@selector(animateBallAndPaddlesToDestinations)
+                   withObject:nil
+                   afterDelay:ROTATION_ANIMATION_DELAY];
+    }
+    
+}
+
+- (void)adjustObjectPositions
+{
+    CGFloat timeSinceCurrentAnimationStarted = -[currentAnimationStartTime timeIntervalSinceNow];
+    CGFloat proportionOfCurrentAnimationCompleted = timeSinceCurrentAnimationStarted / currentAnimationDuration;
+ 
+    CGPoint totalBallDisplacementForCurrentAnimation = CGPointMake(ballDestination.x - ballOrigin.x, ballDestination.y - ballOrigin.y);
+    CGFloat totalLeftPaddleDisplacementForCurrentAnimation = leftPaddleDestination - leftPaddleOrigin;
+    CGFloat totalRightPaddleDisplacementForCurrentAnimation = rightPaddleDestination - rightPaddleOrigin;
+    
+    ballView.center = CGPointMake(ballOrigin.x + (totalBallDisplacementForCurrentAnimation.x * proportionOfCurrentAnimationCompleted),
+                                  ballOrigin.y + (totalBallDisplacementForCurrentAnimation.y * proportionOfCurrentAnimationCompleted));
+    leftPaddleView.center = CGPointMake(leftPaddleView.center.x,
+                                        leftPaddleOrigin + (totalLeftPaddleDisplacementForCurrentAnimation * proportionOfCurrentAnimationCompleted));
+    rightPaddleView.center = CGPointMake(rightPaddleView.center.x,
+                                         rightPaddleOrigin + (totalRightPaddleDisplacementForCurrentAnimation * proportionOfCurrentAnimationCompleted));
+    
+    ballOrigin = ballView.center;
+    leftPaddleOrigin = leftPaddleView.center.y;
+    rightPaddleOrigin = rightPaddleView.center.y;
+}
+
 #pragma mark - Etc, some basic math functions
 
 - (CGPoint)normalizeVector:(CGPoint)vector
@@ -644,46 +687,5 @@ typedef enum {
     
     return (fabsf(float1 - float2) < ellipsis);
 }
-
-#pragma mark - Rotation 
-
-- (void) handleRotation {
-   
-    //adjust frames
-    self.frame = CGRectMake(0.0f, -REFRESH_CONTROL_HEIGHT, self.scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT);
-    gameView.center = CGPointMake(self.scrollView.center.x, gameView.center.y);
-    coverView.frame = CGRectMake(coverView.frame.origin.x, coverView.frame.origin.y, gameView.frame.size.width, gameView.frame.size.height);
-    
-    if (state == BOZPongRefreshControlStateRefreshing)
-    {
-        [self removeAnimations];
-        [self adjustObjectPositions];  //set positions of ball and paddles
-        
-        //animate; slight delay makes transition a little smoother
-        [self performSelector:@selector(animateBallAndPaddlesToDestinations) withObject:Nil afterDelay:ROTATION_ANIMATION_DELAY];
-    }
-    
-}
-
-- (void) adjustObjectPositions
-{
-    float timeInterval = -[time timeIntervalSinceNow]; //how long animation progressed
-    //displacements
-    CGPoint ballDisp = CGPointMake(ballDestination.x - ballOrigin.x, ballDestination.y - ballOrigin.y);
-    CGFloat leftPaddleDisp = leftPaddleDestination - leftPaddleOrigin;
-    CGFloat rightPaddleDisp = rightPaddleDestination - rightPaddleOrigin;
-    
-    float timeProp = timeInterval/[self getAnimationDuration];
-    
-    ballView.center       = CGPointMake(ballOrigin.x + ballDisp.x * timeProp ,ballOrigin.y + ballDisp.y * timeProp);
-    leftPaddleView.center = CGPointMake(leftPaddleView.center.x, leftPaddleOrigin + leftPaddleDisp * timeProp);
-    rightPaddleView.center = CGPointMake(rightPaddleView.center.x, rightPaddleOrigin + rightPaddleDisp * timeProp);
-    
-    ballOrigin = ballView.center;
-    leftPaddleOrigin = leftPaddleView.center.y;
-    rightPaddleOrigin = rightPaddleView.center.y;
-    
-}
-
 
 @end
