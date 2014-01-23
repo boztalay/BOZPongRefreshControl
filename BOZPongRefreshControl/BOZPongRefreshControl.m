@@ -619,11 +619,14 @@ typedef enum {
 - (void)handleOrientationChange {
     //This is a little weird, but it makes sure the refresh control's height is consistent between orientation changes
     self.frame = CGRectMake(0.0f, 0.0f, self.scrollView.frame.size.width, 0.0f);
-    [self setHeightAndOffsetOfRefreshControl:-[self distanceScrolled]];
     
     gameView.center = CGPointMake(self.scrollView.center.x, gameView.center.y);
+    originalTopContentInset = self.scrollView.contentInset.top;
     
-    if (state == BOZPongRefreshControlStateRefreshing) {
+    if(state == BOZPongRefreshControlStateRefreshing) {
+        originalTopContentInset -= REFRESH_CONTROL_HEIGHT;
+        [self setHeightAndOffsetOfRefreshControl:REFRESH_CONTROL_HEIGHT];
+        
         [self removeAnimations];
         [self setGamePiecePositionsForAnimationStop];
         
@@ -632,7 +635,6 @@ typedef enum {
                    withObject:nil
                    afterDelay:ROTATION_ANIMATION_DELAY];
     }
-    
 }
 
 - (void)setGamePiecePositionsForAnimationStop
