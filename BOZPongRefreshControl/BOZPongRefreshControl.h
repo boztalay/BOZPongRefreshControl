@@ -89,13 +89,6 @@
 @property (strong, nonatomic) UIColor* foregroundColor;
 
 /**
- *  This controls whether the refresh control is covered
- *  under translucent headers by a view that matches the
- *  background color of its parent UIScrollView
- */
-@property (nonatomic) BOOL shouldCoverRefreshControlUnderHeader;
-
-/**
  *  This controls how long it takes the ball to get from
  *  one paddle to the other, regardless of floor/ceiling
  *  bouncing

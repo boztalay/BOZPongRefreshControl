@@ -19,6 +19,7 @@
 
 #define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 0.75f
 
+#define TRANSITION_ANIMATION_DURATION 0.2f
 #define ROTATION_ANIMATION_DELAY 0.2f
 
 typedef enum {
@@ -49,7 +50,6 @@ typedef enum {
     CGFloat leftPaddleDestination;
     CGFloat rightPaddleDestination;
 
-    UIView* coverView;
     UIView* gameView;
     
     NSDate* currentAnimationStartTime;
@@ -89,7 +89,8 @@ typedef enum {
         return existingPongRefreshControl;
     }
     
-    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, -REFRESH_CONTROL_HEIGHT, scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT)
+    //Initialized height to 0 to hide it
+    BOZPongRefreshControl* pongRefreshControl = [[BOZPongRefreshControl alloc] initWithFrame:CGRectMake(0.0f, 0.0f, scrollView.frame.size.width, 0.0f)
                                                                                andScrollView:scrollView
                                                                             andRefreshTarget:refreshTarget
                                                                             andRefreshAction:refreshAction];
@@ -126,19 +127,19 @@ typedef enum {
         self.refreshAction = refreshAction;
         
         originalTopContentInset = scrollView.contentInset.top;
-        [self setUpCoverViewAndGameView];
         
-        self.foregroundColor = DEFAULT_FOREGROUND_COLOR;
-        self.backgroundColor = DEFAULT_BACKGROUND_COLOR;
-        
+        [self setUpGameView];
         [self setUpPaddles];
         [self setUpBall];
         
         state = BOZPongRefreshControlStateIdle;
         
+        self.foregroundColor = DEFAULT_FOREGROUND_COLOR;
+        self.backgroundColor = DEFAULT_BACKGROUND_COLOR;
+        
         [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
         [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(handleRotation)
+                                                 selector:@selector(handleOrientationChange)
                                                      name:UIDeviceOrientationDidChangeNotification
                                                    object:nil];
         
@@ -146,27 +147,11 @@ typedef enum {
     return self;
 }
 
-- (void)setUpCoverViewAndGameView
+- (void)setUpGameView
 {
-    gameView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
+    gameView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, REFRESH_CONTROL_HEIGHT)];
     gameView.backgroundColor = [UIColor clearColor];
     [self addSubview:gameView];
-    
-    coverView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
-    coverView.backgroundColor = self.scrollView.backgroundColor;
-    [self.scrollView addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew context:nil];
-    [gameView addSubview:coverView];
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
-                        change:(NSDictionary *)change
-                       context:(void *)context
-{
-    //This is to make sure the cover stays consistent with whatever background
-    //color the parent UIScrollView has.
-    if(object == self.scrollView && [keyPath isEqualToString:@"backgroundColor"]) {
-        coverView.backgroundColor = self.scrollView.backgroundColor;
-    }
 }
 
 - (void)setUpPaddles
@@ -213,11 +198,6 @@ typedef enum {
     ballView.backgroundColor = foregroundColor;
 }
 
-- (void)setShouldCoverRefreshControlUnderHeader:(BOOL)shouldCoverRefreshControlUnderHeader
-{
-    coverView.hidden = !shouldCoverRefreshControlUnderHeader;
-}
-
 #pragma mark - Listening to scroll delegate events
 
 #pragma mark Actively scrolling
@@ -226,38 +206,33 @@ typedef enum {
 {
     CGFloat rawOffset = -self.distanceScrolled;
     
-    [self offsetCoverAndGameViewBy:rawOffset];
+    [self offsetGameViewBy:rawOffset];
     
-    if(state != BOZPongRefreshControlStateRefreshing) {
-
-        if (state == BOZPongRefreshControlStateIdle) {
-            CGFloat ballAndPaddlesOffset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
-            
-            [self offsetBallAndPaddlesBy:ballAndPaddlesOffset];
-            [self rotatePaddlesAccordingToOffset:ballAndPaddlesOffset];
-        }
+    if(state == BOZPongRefreshControlStateIdle) {
+        CGFloat ballAndPaddlesOffset = MIN(rawOffset / 2.0f, HALF_REFRESH_CONTROL_HEIGHT);
+        
+        [self offsetBallAndPaddlesBy:ballAndPaddlesOffset];
+        [self rotatePaddlesAccordingToOffset:ballAndPaddlesOffset];
     }
 }
 
 - (CGFloat)distanceScrolled
 {
-    return self.scrollView.contentOffset.y + self.scrollView.contentInset.top;
+    return (self.scrollView.contentOffset.y + self.scrollView.contentInset.top);
 }
 
-- (void)offsetCoverAndGameViewBy:(CGFloat)offset
+- (void)offsetGameViewBy:(CGFloat)offset
 {
     CGFloat offsetConsideringState = offset;
     if(state != BOZPongRefreshControlStateIdle) {
         offsetConsideringState += REFRESH_CONTROL_HEIGHT;
     }
     
-    [self updateHeightOfRefreshControl:offsetConsideringState];
+    [self setHeightAndOffsetOfRefreshControl:offsetConsideringState];
     [self stickGameViewToBottomOfRefreshControl];
-    
-    coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, (gameView.frame.size.height / 2.0f) - offsetConsideringState);
 }
 
-- (void)updateHeightOfRefreshControl:(CGFloat)offset
+- (void)setHeightAndOffsetOfRefreshControl:(CGFloat)offset
 {
     CGRect newFrame = self.frame;
     newFrame.size.height = offset;
@@ -294,7 +269,6 @@ typedef enum {
 {
     if(state == BOZPongRefreshControlStateIdle) {
         if([self didUserScrollFarEnoughToTriggerRefresh]) {
-            
             [self beginLoading];
             [self notifyTargetOfRefreshTrigger];
         }
@@ -303,7 +277,7 @@ typedef enum {
 
 - (BOOL)didUserScrollFarEnoughToTriggerRefresh
 {
-    return -self.distanceScrolled > REFRESH_CONTROL_HEIGHT;
+    return (-self.distanceScrolled > REFRESH_CONTROL_HEIGHT);
 }
 
 - (void)notifyTargetOfRefreshTrigger
@@ -317,7 +291,7 @@ typedef enum {
     #pragma clang diagnostic pop
 }
 
-#pragma mark - Resetting after loading finished
+#pragma mark - Manually starting a refresh
 
 - (void)beginLoading
 {
@@ -336,12 +310,19 @@ typedef enum {
 
 - (void)scrollRefreshControlToVisibleAnimated:(BOOL)animated
 {
-    [UIView animateWithDuration:0.2f*animated animations:^(void) {
+    CGFloat animationDuration = 0.0f;
+    if(animated) {
+        animationDuration = TRANSITION_ANIMATION_DURATION;
+    }
+    
+    [UIView animateWithDuration:animationDuration animations:^(void) {
         UIEdgeInsets newInsets = self.scrollView.contentInset;
         newInsets.top = originalTopContentInset + REFRESH_CONTROL_HEIGHT;
         self.scrollView.contentInset = newInsets;
     }];
 }
+
+#pragma mark - Resetting after loading finished
 
 - (void)finishedLoading
 {
@@ -353,22 +334,22 @@ typedef enum {
     
     [UIView animateWithDuration:0.2f animations:^(void)
      {
-         [self resetCoverViewAndScrollViewContentInsets];
+         [self.scrollView setContentOffset:CGPointMake(0.0f, -REFRESH_CONTROL_HEIGHT)];
      }
      completion:^(BOOL finished)
      {
+         [self resetScrollViewContentInsets];
+         [self setHeightAndOffsetOfRefreshControl:0.0f];
          [self resetPaddlesAndBall];
          state = BOZPongRefreshControlStateIdle;
      }];
 }
 
-- (void)resetCoverViewAndScrollViewContentInsets
+- (void)resetScrollViewContentInsets
 {
     UIEdgeInsets newInsets = self.scrollView.contentInset;
     newInsets.top = originalTopContentInset;
     self.scrollView.contentInset = newInsets;
-    
-    coverView.center = CGPointMake(gameView.frame.size.width / 2.0f, gameView.frame.size.height / 2.0f);
 }
 
 - (void)resetPaddlesAndBall
@@ -635,14 +616,16 @@ typedef enum {
 
 #pragma mark - Handling orientation changes
 
-- (void)handleRotation {
-    self.frame = CGRectMake(0.0f, -REFRESH_CONTROL_HEIGHT, self.scrollView.frame.size.width, REFRESH_CONTROL_HEIGHT);
+- (void)handleOrientationChange {
+    //This is a little weird, but it makes sure the refresh control's height is consistent between orientation changes
+    self.frame = CGRectMake(0.0f, 0.0f, self.scrollView.frame.size.width, 0.0f);
+    [self setHeightAndOffsetOfRefreshControl:-[self distanceScrolled]];
+    
     gameView.center = CGPointMake(self.scrollView.center.x, gameView.center.y);
-    coverView.frame = CGRectMake(coverView.frame.origin.x, coverView.frame.origin.y, gameView.frame.size.width, gameView.frame.size.height);
     
     if (state == BOZPongRefreshControlStateRefreshing) {
         [self removeAnimations];
-        [self adjustObjectPositions];
+        [self setGamePiecePositionsForAnimationStop];
         
         //Slight delay makes the transition smoother
         [self performSelector:@selector(animateBallAndPaddlesToDestinations)
@@ -652,7 +635,7 @@ typedef enum {
     
 }
 
-- (void)adjustObjectPositions
+- (void)setGamePiecePositionsForAnimationStop
 {
     CGFloat timeSinceCurrentAnimationStarted = -[currentAnimationStartTime timeIntervalSinceNow];
     CGFloat proportionOfCurrentAnimationCompleted = timeSinceCurrentAnimationStarted / currentAnimationDuration;
