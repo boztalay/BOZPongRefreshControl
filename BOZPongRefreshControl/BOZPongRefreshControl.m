@@ -5,7 +5,7 @@
 //  Created by Ben Oztalay on 11/22/13.
 //  Copyright (c) 2013 Ben Oztalay. All rights reserved.
 //
-//  Version 0.1.1
+//  Version 1.0.0
 //  https://www.github.com/boztalay/BOZPongRefreshControl
 //
 
