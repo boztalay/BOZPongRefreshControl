@@ -489,7 +489,7 @@ typedef enum {
     if(ballDirection.x < 0.0f) {
         //Ball is going toward the left paddle
 
-        if([self isBallDestinationIsTheLeftPaddle]) {
+        if([self isBallDestinationTheLeftPaddle]) {
             leftPaddleOffset = (leftPaddleVerticalDistanceToBallDestination * holyCrapSpeedFactor);
             rightPaddleOffset = (rightPaddleVerticalDistanceToBallDestination * lazySpeedFactor);
         } else {
@@ -500,7 +500,7 @@ typedef enum {
     } else {
         //Ball is going toward the right paddle
         
-        if([self isBallDestinationIsTheRightPaddle]) {
+        if([self isBallDestinationTheRightPaddle]) {
             leftPaddleOffset = (leftPaddleVerticalDistanceToBallDestination * lazySpeedFactor);
             rightPaddleOffset = (rightPaddleVerticalDistanceToBallDestination * holyCrapSpeedFactor);
         } else {
@@ -517,12 +517,12 @@ typedef enum {
     [self capPaddleDestinationsToWalls];
 }
 
-- (BOOL)isBallDestinationIsTheLeftPaddle
+- (BOOL)isBallDestinationTheLeftPaddle
 {
     return ([self isFloat:ballDestination.x equalToFloat:[self leftPaddleContactX]]);
 }
 
-- (BOOL)isBallDestinationIsTheRightPaddle
+- (BOOL)isBallDestinationTheRightPaddle
 {
     return ([self isFloat:ballDestination.x equalToFloat:[self rightPaddleContactX]]);
 }
