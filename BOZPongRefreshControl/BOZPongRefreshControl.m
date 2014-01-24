@@ -20,7 +20,6 @@
 #define DEFAULT_TOTAL_HORIZONTAL_TRAVEL_TIME_FOR_BALL 0.75f
 
 #define TRANSITION_ANIMATION_DURATION 0.2f
-#define ROTATION_ANIMATION_DELAY 0.2f
 
 typedef enum {
     BOZPongRefreshControlStateIdle = 0,
@@ -129,6 +128,7 @@ typedef enum {
         originalTopContentInset = scrollView.contentInset.top;
         
         [self setUpGameView];
+        [self setUpGamePieceIdleOrigins];
         [self setUpPaddles];
         [self setUpBall];
         
@@ -154,14 +154,19 @@ typedef enum {
     [self addSubview:gameView];
 }
 
-- (void)setUpPaddles
+- (void)setUpGamePieceIdleOrigins
 {
     leftPaddleIdleOrigin = CGPointMake(gameView.frame.size.width * 0.25f, gameView.frame.size.height);
+    rightPaddleIdleOrigin = CGPointMake(gameView.frame.size.width * 0.75f, gameView.frame.size.height);
+    ballIdleOrigin = CGPointMake(gameView.frame.size.width * 0.50f, 0.0f);
+}
+
+- (void)setUpPaddles
+{
     leftPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
     leftPaddleView.center = leftPaddleIdleOrigin;
     leftPaddleView.backgroundColor = self.foregroundColor;
     
-    rightPaddleIdleOrigin = CGPointMake(gameView.frame.size.width * 0.75f, gameView.frame.size.height);
     rightPaddleView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 2.0f, 15.0f)];
     rightPaddleView.center = rightPaddleIdleOrigin;
     rightPaddleView.backgroundColor = self.foregroundColor;
@@ -172,7 +177,6 @@ typedef enum {
 
 - (void)setUpBall
 {
-    ballIdleOrigin = CGPointMake(gameView.frame.size.width * 0.50f, 0.0f);
     ballView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 3.0f, 3.0f)];
     ballView.center = ballIdleOrigin;
     ballView.backgroundColor = self.foregroundColor;
@@ -617,28 +621,32 @@ typedef enum {
 #pragma mark - Handling orientation changes
 
 - (void)handleOrientationChange {
-    //This is a little weird, but it makes sure the refresh control's height is consistent between orientation changes
     self.frame = CGRectMake(0.0f, 0.0f, self.scrollView.frame.size.width, 0.0f);
+    CGFloat gameViewWidthBeforeOrientationChange = gameView.frame.size.width;
+    gameView.frame = CGRectMake(0.0f, 0.0f, self.frame.size.width, REFRESH_CONTROL_HEIGHT);
     
-    gameView.center = CGPointMake(self.scrollView.center.x, gameView.center.y);
     originalTopContentInset = self.scrollView.contentInset.top;
+    
+    [self setUpGamePieceIdleOrigins];
     
     if(state == BOZPongRefreshControlStateRefreshing) {
         originalTopContentInset -= REFRESH_CONTROL_HEIGHT;
         [self setHeightAndOffsetOfRefreshControl:REFRESH_CONTROL_HEIGHT];
         
         [self removeAnimations];
-        [self setGamePiecePositionsForAnimationStop];
+        CGFloat horizontalScaleFactor = gameView.frame.size.width / gameViewWidthBeforeOrientationChange;
+        [self setGamePiecePositionsForAnimationStop:horizontalScaleFactor];
         
-        //Slight delay makes the transition smoother
-        [self performSelector:@selector(animateBallAndPaddlesToDestinations)
-                   withObject:nil
-                   afterDelay:ROTATION_ANIMATION_DELAY];
+        [self animateBallAndPaddlesToDestinations];
+    } else {
+        [self setGamePiecePositionsToIdle];
     }
 }
 
-- (void)setGamePiecePositionsForAnimationStop
+- (void)setGamePiecePositionsForAnimationStop:(CGFloat)horizontalScaleFactor
 {
+    //Place the game pieces as though the animation got cut off
+    
     CGFloat timeSinceCurrentAnimationStarted = -[currentAnimationStartTime timeIntervalSinceNow];
     CGFloat proportionOfCurrentAnimationCompleted = timeSinceCurrentAnimationStarted / currentAnimationDuration;
  
@@ -656,6 +664,23 @@ typedef enum {
     ballOrigin = ballView.center;
     leftPaddleOrigin = leftPaddleView.center.y;
     rightPaddleOrigin = rightPaddleView.center.y;
+    
+    //Now scale everything for the change in horizontal distance
+    
+    leftPaddleView.center = CGPointMake(leftPaddleView.center.x * horizontalScaleFactor, leftPaddleView.center.y);
+    rightPaddleView.center = CGPointMake(rightPaddleView.center.x * horizontalScaleFactor, rightPaddleView.center.y);
+    
+    ballView.center = CGPointMake(ballView.center.x * horizontalScaleFactor, ballView.center.y);
+    ballOrigin = CGPointMake(ballOrigin.x * horizontalScaleFactor, ballOrigin.y);
+    ballDestination = CGPointMake(ballDestination.x * horizontalScaleFactor, ballDestination.y);
+    ballDirection = [self normalizeVector:CGPointMake(ballDirection.x * horizontalScaleFactor, ballDirection.y)];
+}
+
+- (void)setGamePiecePositionsToIdle
+{
+    leftPaddleView.center = leftPaddleIdleOrigin;
+    rightPaddleView.center = rightPaddleIdleOrigin;
+    ballView.center = ballIdleOrigin;
 }
 
 #pragma mark - Etc, some basic math functions
