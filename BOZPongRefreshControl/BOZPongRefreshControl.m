@@ -332,14 +332,13 @@ typedef enum {
     
     state = BOZPongRefreshControlStateResetting;
     
-    [UIView animateWithDuration:0.2f animations:^(void)
-     {
-         [self.scrollView setContentOffset:CGPointMake(0.0f, -REFRESH_CONTROL_HEIGHT)];
-     }
-     completion:^(BOOL finished)
+    [UIView animateWithDuration:TRANSITION_ANIMATION_DURATION animations:^(void)
      {
          [self resetScrollViewContentInsets];
          [self setHeightAndOffsetOfRefreshControl:0.0f];
+     }
+     completion:^(BOOL finished)
+     {
          [self resetPaddlesAndBall];
          state = BOZPongRefreshControlStateIdle;
      }];
@@ -359,6 +358,13 @@ typedef enum {
     leftPaddleView.center = leftPaddleIdleOrigin;
     rightPaddleView.center = rightPaddleIdleOrigin;
     ballView.center = ballIdleOrigin;
+}
+
+- (void)removeAnimations
+{
+    [leftPaddleView.layer removeAllAnimations];
+    [rightPaddleView.layer removeAllAnimations];
+    [ballView.layer removeAllAnimations];
 }
 
 #pragma mark - Playing pong
@@ -562,12 +568,6 @@ typedef enum {
     return (self.totalHorizontalTravelTimeForBall * proportionOfHorizontalDistanceLeftForBallToTravel);
 }
 
-- (void)removeAnimations
-{
-    [leftPaddleView.layer removeAllAnimations];
-    [rightPaddleView.layer removeAllAnimations];
-    [ballView.layer removeAllAnimations];
-}
 #pragma mark Helper functions for collision detection
 
 #pragma mark Ball collisions
