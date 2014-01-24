@@ -30,10 +30,12 @@
         
         if(i == 0) {
             scrollMeLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+            scrollMeLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
             [view addSubview:scrollMeLabel];
             [self setScrollMeLabelText:@"Scroll Me!"];
         }
         
+        view.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         [self.scrollView addSubview:view];
     }
     
