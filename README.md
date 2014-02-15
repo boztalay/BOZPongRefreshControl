@@ -73,7 +73,6 @@ Configuration
 - Set the foreground color with the ```foregroundColor``` property
 - Set the background color with the ```backgroundColor``` property
 - Adjust how fast it plays by changing the ```totalHorizontalTravelTimeForBall``` property
-- Change whether or not to use the cover with the ```shouldCoverRefreshControlUnderHeader``` property
 
 Known Issues/To Do
 ------------------
