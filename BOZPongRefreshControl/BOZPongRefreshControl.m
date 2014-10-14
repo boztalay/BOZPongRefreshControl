@@ -55,8 +55,8 @@ typedef enum {
     CGFloat currentAnimationDuration;
 }
 
-@property (strong, nonatomic) UIScrollView* scrollView;
-@property (strong, nonatomic) id refreshTarget;
+@property (assign, nonatomic) UIScrollView* scrollView;
+@property (assign, nonatomic) id refreshTarget;
 @property (nonatomic) SEL refreshAction;
 @property (nonatomic, readonly) CGFloat distanceScrolled;
 
@@ -145,6 +145,11 @@ typedef enum {
         
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIDeviceOrientationDidChangeNotification object:nil];
 }
 
 - (void)setUpGameView
