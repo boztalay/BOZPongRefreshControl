@@ -324,10 +324,14 @@ typedef enum {
         animationDuration = TRANSITION_ANIMATION_DURATION;
     }
     
+    
+    UIEdgeInsets newInsets = self.scrollView.contentInset;
+    newInsets.top = originalTopContentInset + REFRESH_CONTROL_HEIGHT;
+    CGPoint contentOffset = self.scrollView.contentOffset;
+    
     [UIView animateWithDuration:animationDuration animations:^(void) {
-        UIEdgeInsets newInsets = self.scrollView.contentInset;
-        newInsets.top = originalTopContentInset + REFRESH_CONTROL_HEIGHT;
         self.scrollView.contentInset = newInsets;
+        self.scrollView.contentOffset = contentOffset;
     }];
 }
 
