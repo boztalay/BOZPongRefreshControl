@@ -24,7 +24,7 @@ Attach it to a ```UITableView``` or ```UIScrollView``` like so:
     
     /* NOTE: Do NOT attach the refresh control in viewDidLoad!
      * If you do this here, it'll act very funny if you have
-     * a navigation bar or other such similar thing that iOS 7
+     * a navigation bar or other such similar thing that iOS
      * automatically offsets content for. You have to wait for
      * the subviews to get laid out first so the refresh
      * control knows how big that offset is!
