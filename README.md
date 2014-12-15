@@ -79,6 +79,6 @@ Known Issues/To Do
 
 - It'll interfere with ```UIScrollView``` content that's above ```y = 0.0f```
 - I haven't tested it, but I'd be willing to bet it looks a bit silly on iPads
-- Test it out on a physical iPhone 6/+
+- Test it out on a physical iPhone 6+
 - The behavior of the paddles needs a little work
 - Tests!
