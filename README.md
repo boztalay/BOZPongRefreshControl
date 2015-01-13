@@ -81,4 +81,5 @@ Known Issues/To Do
 - I haven't tested it, but I'd be willing to bet it looks a bit silly on iPads
 - Test it out on a physical iPhone 6+
 - The behavior of the paddles needs a little work
+- The the ```UIScrollView``` that it's attached to is scrolled automatically, the refresh control may be scrolled down into view under some circumstances (expanding/collapsing ```UITableViewCell```s, for example)
 - Tests!
